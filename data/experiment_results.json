@@ -1,0 +1,107 @@
+{
+  "ablation": [
+    {
+      "config": "Full (5-layer)",
+      "agent_rate": 92.96944767677861,
+      "benign_rate": 24.72955430549546,
+      "discrimination": 68.23989337128316
+    },
+    {
+      "config": "No Temporal (P4)",
+      "agent_rate": 73.86950991800396,
+      "benign_rate": 21.462570315880573,
+      "discrimination": 52.40693960212339
+    },
+    {
+      "config": "No Adaptive (P0/P5)",
+      "agent_rate": 92.96403539631424,
+      "benign_rate": 24.72955430549546,
+      "discrimination": 68.23448109081879
+    },
+    {
+      "config": "No Pattern (P1)",
+      "agent_rate": 90.06305306740995,
+      "benign_rate": 11.67604211740949,
+      "discrimination": 78.38701095000046
+    },
+    {
+      "config": "Prior Only (P2/P3)",
+      "agent_rate": 0.4411008578464536,
+      "benign_rate": 2.3799221116399827,
+      "discrimination": -1.9388212537935292
+    },
+    {
+      "config": "Temporal Only",
+      "agent_rate": 89.73561009931534,
+      "benign_rate": 9.260060579835569,
+      "discrimination": 80.47554951947977
+    }
+  ],
+  "synthetic_detection": [
+    {
+      "test": "Rebirth Sequence",
+      "result": "PASS"
+    },
+    {
+      "test": "Disguised C2 Exfil",
+      "result": "PASS"
+    },
+    {
+      "test": "SUID Privilege Escalation",
+      "result": "PASS"
+    },
+    {
+      "test": "Memory-only Exfiltration",
+      "result": "PASS"
+    },
+    {
+      "test": "Uniform Recon Sweep",
+      "result": "PASS"
+    },
+    {
+      "test": "Sleep Stepping Pattern",
+      "result": "PASS"
+    },
+    {
+      "test": "Benign Low FPR",
+      "result": "PASS"
+    }
+  ],
+  "cross_host": [
+    {
+      "host": "test-vm-N",
+      "events": 5000,
+      "fpr": 1.22
+    },
+    {
+      "host": "test-vm-N",
+      "events": 5000,
+      "fpr": 0.96
+    },
+    {
+      "host": "test-vm-N",
+      "events": 3731,
+      "fpr": 2.3586169927633343
+    },
+    {
+      "host": "test-vm-N",
+      "events": 3733,
+      "fpr": 4.687918564157514
+    },
+    {
+      "host": "test-vm-N",
+      "events": 2463,
+      "fpr": 3.613479496548924
+    },
+    {
+      "host": "test-vm-N",
+      "events": 2688,
+      "fpr": 6.063988095238095
+    },
+    {
+      "host": "test-vm-N",
+      "events": 2450,
+      "fpr": 4.653061224489797
+    }
+  ]
+}

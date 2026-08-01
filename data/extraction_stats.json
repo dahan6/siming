@@ -1,0 +1,17 @@
+{
+  "n_sequences": 49,
+  "total_events": 70209,
+  "primitive_dist": {
+    "probe": 29660,
+    "recon": 28391,
+    "persist": 5874,
+    "unknown": 5556,
+    "exfil": 285,
+    "evasion": 186,
+    "privesc": 124,
+    "communicate": 55,
+    "impact": 40,
+    "timing": 38
+  },
+  "note": "Statistics from attack sequence extraction (sanitized)"
+}
