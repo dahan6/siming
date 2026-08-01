@@ -1,0 +1,1789 @@
+{
+  "generated_at": "2026-08-01 18:23:48",
+  "n_samples": 80,
+  "n_clusters": 22,
+  "model_dir": "model-vm-universal",
+  "patterns": [
+    {
+      "cluster_id": 0,
+      "n_samples": 5,
+      "techniques": {
+        "T1082": 5
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "head",
+        "systemctl",
+        "journalctl",
+        "ls",
+        "find"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 33
+        },
+        {
+          "pair": [
+            "DT4",
+            "ET:EXEC"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "ARGV:N2-",
+            "PARENT:bash"
+          ],
+          "count": 15
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT4"
+          ],
+          "count": 14
+        },
+        {
+          "pair": [
+            "DT5",
+            "ET:EXEC"
+          ],
+          "count": 10
+        },
+        {
+          "pair": [
+            "ARGV:N1-",
+            "PARENT:bash"
+          ],
+          "count": 10
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT5"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:head"
+          ],
+          "count": 9
+        }
+      ],
+      "top_procs": {
+        "head": 9,
+        "systemctl": 7,
+        "journalctl": 6,
+        "ls": 5,
+        "find": 3,
+        "cat": 2,
+        "ps": 2,
+        "df": 2,
+        "rm": 1,
+        "ss": 1
+      },
+      "top_parents": {
+        "bash": 40
+      }
+    },
+    {
+      "cluster_id": 1,
+      "n_samples": 6,
+      "techniques": {
+        "T1543.002": 3,
+        "T1053.006": 3
+      },
+      "main_technique": "T1543.002",
+      "common_procs": [
+        "netplan",
+        "sshd-socket-gen",
+        "systemctl",
+        "snapd-env-gener",
+        "cloud-init-gene"
+      ],
+      "common_parents": [
+        "(direxec)",
+        "?",
+        "cloud-init-gene",
+        "sudo",
+        "friendly-recove"
+      ],
+      "common_etypes": [
+        "EXEC",
+        "CONN"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 561
+        },
+        {
+          "pair": [
+            "PARENT:(direxec)",
+            "UID:0"
+          ],
+          "count": 408
+        },
+        {
+          "pair": [
+            "ARGV:N2PB",
+            "PC:OTHER"
+          ],
+          "count": 384
+        },
+        {
+          "pair": [
+            "PC:OTHER",
+            "PARENT:(direxec)"
+          ],
+          "count": 384
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT0"
+          ],
+          "count": 305
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:EXEC"
+          ],
+          "count": 304
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 232
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 227
+        },
+        {
+          "pair": [
+            "ARGV0",
+            "PC:NONE"
+          ],
+          "count": 192
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:?"
+          ],
+          "count": 192
+        }
+      ],
+      "top_procs": {
+        "netplan": 120,
+        "sshd-socket-gen": 96,
+        "systemctl": 48,
+        "snapd-env-gener": 24,
+        "cloud-init-gene": 24,
+        "friendly-recove": 24,
+        "snapd-generator": 24,
+        "ds-identify": 24,
+        "cat": 24,
+        "uname": 24
+      },
+      "top_parents": {
+        "(direxec)": 408,
+        "?": 192,
+        "cloud-init-gene": 72,
+        "sudo": 33,
+        "friendly-recove": 24
+      }
+    },
+    {
+      "cluster_id": 2,
+      "n_samples": 8,
+      "techniques": {
+        "T1082": 8
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "readlink"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:readlink"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "PROC:readlink",
+            "ARGV:N2P"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PARENT:bash"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:0"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT1"
+          ],
+          "count": 64
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 56
+        }
+      ],
+      "top_procs": {
+        "readlink": 64
+      },
+      "top_parents": {
+        "bash": 64
+      }
+    },
+    {
+      "cluster_id": 3,
+      "n_samples": 6,
+      "techniques": {
+        "T1053.003": 3,
+        "T1574.006": 3
+      },
+      "main_technique": "T1053.003",
+      "common_procs": [
+        "tee"
+      ],
+      "common_parents": [
+        "sudo"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:tee"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PROC:tee",
+            "ARGV:N1P"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PARENT:sudo",
+            "UID:0"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "ARGV:N1P",
+            "PC:ETC_CRON"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PC:ETC_CRON",
+            "PARENT:sudo"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ARGV:N1P",
+            "PC:ETC_LD"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PC:ETC_LD",
+            "PARENT:sudo"
+          ],
+          "count": 3
+        }
+      ],
+      "top_procs": {
+        "tee": 6
+      },
+      "top_parents": {
+        "sudo": 6
+      }
+    },
+    {
+      "cluster_id": 4,
+      "n_samples": 3,
+      "techniques": {
+        "T1053.002": 3
+      },
+      "main_technique": "T1053.002",
+      "common_procs": [
+        "at",
+        "atrm"
+      ],
+      "common_parents": [
+        "?",
+        "bash"
+      ],
+      "common_etypes": [
+        "CONN",
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ARGV0",
+            "PC:NONE"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:?"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "PARENT:?",
+            "UID:1"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "UID:1",
+            "DST:OTHER"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "DST:OTHER",
+            "DT0"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:CONN"
+          ],
+          "count": 18
+        },
+        {
+          "pair": [
+            "ET:CONN",
+            "PROC:at"
+          ],
+          "count": 12
+        },
+        {
+          "pair": [
+            "PROC:at",
+            "ARGV0"
+          ],
+          "count": 12
+        },
+        {
+          "pair": [
+            "ET:CONN",
+            "PROC:atrm"
+          ],
+          "count": 12
+        },
+        {
+          "pair": [
+            "PROC:atrm",
+            "ARGV0"
+          ],
+          "count": 12
+        }
+      ],
+      "top_procs": {
+        "at": 15,
+        "atrm": 15
+      },
+      "top_parents": {
+        "?": 24,
+        "bash": 6
+      }
+    },
+    {
+      "cluster_id": 5,
+      "n_samples": 7,
+      "techniques": {
+        "T1082": 7
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "readlink",
+        "env",
+        "sudo",
+        "grep",
+        "ps"
+      ],
+      "common_parents": [
+        "bash",
+        "sh"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 56
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 49
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT1"
+          ],
+          "count": 46
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:0"
+          ],
+          "count": 42
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PARENT:bash"
+          ],
+          "count": 34
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:readlink"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "PROC:readlink",
+            "ARGV:N2P"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "ARGV:N2-",
+            "PARENT:bash"
+          ],
+          "count": 15
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT0"
+          ],
+          "count": 10
+        }
+      ],
+      "top_procs": {
+        "readlink": 27,
+        "env": 7,
+        "sudo": 7,
+        "grep": 7,
+        "ps": 7,
+        "logger": 1
+      },
+      "top_parents": {
+        "bash": 49,
+        "sh": 7
+      }
+    },
+    {
+      "cluster_id": 6,
+      "n_samples": 3,
+      "techniques": {
+        "T1546.004": 3
+      },
+      "main_technique": "T1546.004",
+      "common_procs": [
+        "tee"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:tee"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PROC:tee",
+            "ARGV:N2P"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PC:HOME_RC"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PC:HOME_RC",
+            "PARENT:bash"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 3
+        }
+      ],
+      "top_procs": {
+        "tee": 3
+      },
+      "top_parents": {
+        "bash": 3
+      }
+    },
+    {
+      "cluster_id": 7,
+      "n_samples": 3,
+      "techniques": {
+        "T1547.006": 3
+      },
+      "main_technique": "T1547.006",
+      "common_procs": [
+        "modprobe"
+      ],
+      "common_parents": [
+        "sudo"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:modprobe"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:sudo"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PARENT:sudo",
+            "UID:0"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PROC:modprobe",
+            "ARGV:N1-"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ARGV:N1-",
+            "PC:NONE"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PROC:modprobe",
+            "ARGV:N2-"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ARGV:N2-",
+            "PC:NONE"
+          ],
+          "count": 3
+        }
+      ],
+      "top_procs": {
+        "modprobe": 6
+      },
+      "top_parents": {
+        "sudo": 6
+      }
+    },
+    {
+      "cluster_id": 8,
+      "n_samples": 3,
+      "techniques": {
+        "T1098.004": 3
+      },
+      "main_technique": "T1098.004",
+      "common_procs": [
+        "ssh-keygen",
+        "cat"
+      ],
+      "common_parents": [
+        "bash",
+        "?"
+      ],
+      "common_etypes": [
+        "EXEC",
+        "CONN"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PC:TMP",
+            "PARENT:bash"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:CONN"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "ET:CONN",
+            "PROC:ssh-keygen"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PROC:ssh-keygen",
+            "ARGV0"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "ARGV0",
+            "PC:NONE"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:?"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PARENT:?",
+            "UID:1000"
+          ],
+          "count": 6
+        }
+      ],
+      "top_procs": {
+        "ssh-keygen": 9,
+        "cat": 3
+      },
+      "top_parents": {
+        "bash": 6,
+        "?": 6
+      }
+    },
+    {
+      "cluster_id": 9,
+      "n_samples": 3,
+      "techniques": {
+        "T1136.001": 3
+      },
+      "main_technique": "T1136.001",
+      "common_procs": [
+        "useradd",
+        "userdel"
+      ],
+      "common_parents": [
+        "?",
+        "sudo"
+      ],
+      "common_etypes": [
+        "CONN",
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ARGV0",
+            "PC:NONE"
+          ],
+          "count": 45
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:?"
+          ],
+          "count": 45
+        },
+        {
+          "pair": [
+            "PARENT:?",
+            "UID:0"
+          ],
+          "count": 45
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:OTHER"
+          ],
+          "count": 45
+        },
+        {
+          "pair": [
+            "ET:CONN",
+            "PROC:useradd"
+          ],
+          "count": 39
+        },
+        {
+          "pair": [
+            "PROC:useradd",
+            "ARGV0"
+          ],
+          "count": 39
+        },
+        {
+          "pair": [
+            "DST:OTHER",
+            "DT0"
+          ],
+          "count": 28
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:CONN"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:CONN"
+          ],
+          "count": 15
+        },
+        {
+          "pair": [
+            "DST:OTHER",
+            "DT1"
+          ],
+          "count": 11
+        }
+      ],
+      "top_procs": {
+        "useradd": 42,
+        "userdel": 9
+      },
+      "top_parents": {
+        "?": 45,
+        "sudo": 6
+      }
+    },
+    {
+      "cluster_id": 10,
+      "n_samples": 2,
+      "techniques": {
+        "T1548.001": 2
+      },
+      "main_technique": "T1548.001",
+      "common_procs": [
+        "env",
+        "sudo"
+      ],
+      "common_parents": [
+        "sh",
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:env"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "PROC:env",
+            "ARGV:N3P"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "ARGV:N3P",
+            "PARENT:sh"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "PARENT:sh",
+            "UID:0"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT0"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:EXEC"
+          ],
+          "count": 8
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:sudo"
+          ],
+          "count": 7
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 7
+        }
+      ],
+      "top_procs": {
+        "env": 9,
+        "sudo": 7
+      },
+      "top_parents": {
+        "sh": 9,
+        "bash": 7
+      }
+    },
+    {
+      "cluster_id": 11,
+      "n_samples": 3,
+      "techniques": {
+        "T1037.004": 3
+      },
+      "main_technique": "T1037.004",
+      "common_procs": [
+        "tee",
+        "chmod"
+      ],
+      "common_parents": [
+        "sudo"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PC:OTHER",
+            "PARENT:sudo"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "PARENT:sudo",
+            "UID:0"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "DT1"
+          ],
+          "count": 5
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:tee"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PROC:tee",
+            "ARGV:N1P"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ARGV:N1P",
+            "PC:OTHER"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:chmod"
+          ],
+          "count": 3
+        },
+        {
+          "pair": [
+            "PROC:chmod",
+            "ARGV:N2P"
+          ],
+          "count": 3
+        }
+      ],
+      "top_procs": {
+        "tee": 3,
+        "chmod": 3
+      },
+      "top_parents": {
+        "sudo": 6
+      }
+    },
+    {
+      "cluster_id": 12,
+      "n_samples": 3,
+      "techniques": {
+        "T1053.003": 3
+      },
+      "main_technique": "T1053.003",
+      "common_procs": [
+        "crontab"
+      ],
+      "common_parents": [
+        "?",
+        "bash"
+      ],
+      "common_etypes": [
+        "CONN",
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:CONN",
+            "PROC:crontab"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "PROC:crontab",
+            "ARGV0"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "ARGV0",
+            "PC:NONE"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "PARENT:?"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "PARENT:?",
+            "UID:1000"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:OTHER"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "DST:OTHER",
+            "DT0"
+          ],
+          "count": 24
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:CONN"
+          ],
+          "count": 21
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:crontab"
+          ],
+          "count": 9
+        },
+        {
+          "pair": [
+            "PROC:crontab",
+            "ARGV:N1-"
+          ],
+          "count": 9
+        }
+      ],
+      "top_procs": {
+        "crontab": 36
+      },
+      "top_parents": {
+        "?": 27,
+        "bash": 9
+      }
+    },
+    {
+      "cluster_id": 13,
+      "n_samples": 6,
+      "techniques": {
+        "T1082": 6
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "cat",
+        "head",
+        "tail",
+        "tar",
+        "systemctl"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 48
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 48
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 39
+        },
+        {
+          "pair": [
+            "DT4",
+            "ET:EXEC"
+          ],
+          "count": 18
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT4"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "ARGV:N1-",
+            "PARENT:bash"
+          ],
+          "count": 14
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PARENT:bash"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "ARGV:N1P",
+            "PARENT:bash"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:cat"
+          ],
+          "count": 10
+        },
+        {
+          "pair": [
+            "PROC:cat",
+            "ARGV:N1P"
+          ],
+          "count": 10
+        }
+      ],
+      "top_procs": {
+        "cat": 10,
+        "head": 9,
+        "tail": 7,
+        "tar": 5,
+        "systemctl": 4,
+        "df": 3,
+        "find": 3,
+        "grep": 2,
+        "ss": 2,
+        "uptime": 1
+      },
+      "top_parents": {
+        "bash": 48
+      }
+    },
+    {
+      "cluster_id": 15,
+      "n_samples": 2,
+      "techniques": {
+        "T1548.001": 2
+      },
+      "main_technique": "T1548.001",
+      "common_procs": [
+        "env",
+        "sudo"
+      ],
+      "common_parents": [
+        "sh",
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT1"
+          ],
+          "count": 12
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:env"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "PROC:env",
+            "ARGV:N3P"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "ARGV:N3P",
+            "PARENT:sh"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "PARENT:sh",
+            "UID:0"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 11
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 10
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:sudo"
+          ],
+          "count": 5
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 5
+        }
+      ],
+      "top_procs": {
+        "env": 11,
+        "sudo": 5
+      },
+      "top_parents": {
+        "sh": 11,
+        "bash": 5
+      }
+    },
+    {
+      "cluster_id": 17,
+      "n_samples": 5,
+      "techniques": {
+        "T1082": 5
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "readlink"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:readlink"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "PROC:readlink",
+            "ARGV:N2P"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PARENT:bash"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:0"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "UID:0",
+            "DST:NONE"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 40
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT0"
+          ],
+          "count": 27
+        },
+        {
+          "pair": [
+            "DT0",
+            "ET:EXEC"
+          ],
+          "count": 23
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT1"
+          ],
+          "count": 13
+        },
+        {
+          "pair": [
+            "DT1",
+            "ET:EXEC"
+          ],
+          "count": 12
+        }
+      ],
+      "top_procs": {
+        "readlink": 40
+      },
+      "top_parents": {
+        "bash": 40
+      }
+    },
+    {
+      "cluster_id": 20,
+      "n_samples": 6,
+      "techniques": {
+        "T1082": 6
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "head",
+        "grep",
+        "cat",
+        "uptime",
+        "journalctl"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 48
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 48
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 43
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT5"
+          ],
+          "count": 19
+        },
+        {
+          "pair": [
+            "DT5",
+            "ET:EXEC"
+          ],
+          "count": 19
+        },
+        {
+          "pair": [
+            "ARGV:N1-",
+            "PARENT:bash"
+          ],
+          "count": 15
+        },
+        {
+          "pair": [
+            "ARGV:N2P",
+            "PARENT:bash"
+          ],
+          "count": 13
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT4"
+          ],
+          "count": 13
+        },
+        {
+          "pair": [
+            "DT4",
+            "ET:EXEC"
+          ],
+          "count": 12
+        },
+        {
+          "pair": [
+            "ARGV:N2-",
+            "PARENT:bash"
+          ],
+          "count": 10
+        }
+      ],
+      "top_procs": {
+        "head": 7,
+        "grep": 6,
+        "cat": 5,
+        "uptime": 4,
+        "journalctl": 3,
+        "systemctl": 3,
+        "ls": 3,
+        "ss": 3,
+        "free": 2,
+        "tail": 2
+      },
+      "top_parents": {
+        "bash": 48
+      }
+    },
+    {
+      "cluster_id": 21,
+      "n_samples": 2,
+      "techniques": {
+        "T1082": 2
+      },
+      "main_technique": "T1082",
+      "common_procs": [
+        "cat",
+        "rm",
+        "ls",
+        "head",
+        "tar"
+      ],
+      "common_parents": [
+        "bash"
+      ],
+      "common_etypes": [
+        "EXEC"
+      ],
+      "common_bigrams": [
+        {
+          "pair": [
+            "PARENT:bash",
+            "UID:1000"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "UID:1000",
+            "DST:NONE"
+          ],
+          "count": 16
+        },
+        {
+          "pair": [
+            "DST:NONE",
+            "PC:NONE"
+          ],
+          "count": 15
+        },
+        {
+          "pair": [
+            "ARGV:N1P",
+            "PARENT:bash"
+          ],
+          "count": 10
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT5"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "DT5",
+            "ET:EXEC"
+          ],
+          "count": 6
+        },
+        {
+          "pair": [
+            "ET:EXEC",
+            "PROC:cat"
+          ],
+          "count": 5
+        },
+        {
+          "pair": [
+            "PROC:cat",
+            "ARGV:N1P"
+          ],
+          "count": 5
+        },
+        {
+          "pair": [
+            "PC:NONE",
+            "DT4"
+          ],
+          "count": 4
+        },
+        {
+          "pair": [
+            "DT4",
+            "ET:EXEC"
+          ],
+          "count": 4
+        }
+      ],
+      "top_procs": {
+        "cat": 5,
+        "rm": 3,
+        "ls": 2,
+        "head": 2,
+        "tar": 1,
+        "tail": 1,
+        "journalctl": 1,
+        "df": 1
+      },
+      "top_parents": {
+        "bash": 16
+      }
+    }
+  ]
+}
