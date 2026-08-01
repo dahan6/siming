@@ -7,7 +7,7 @@
 [![Model](https://img.shields.io/badge/model-0.88M%20params%20%2F%203.6%20MB-green.svg)]()
 [![Paper](https://img.shields.io/badge/arXiv-cs.CR-b31b1b.svg)]()
 
-<p align="center"><b>Zhiyan Security Lab</b></p>
+<p align="center"><b>Zihan Luo</b></p>
 
 ---
 
@@ -166,7 +166,7 @@ python3 detector/test_e2e_v3.py
 ```bibtex
 @misc{siming2026,
     title={Behavioral Grammar: Detecting Adaptive Malware via Tiny Language Model Priors and Second-Order Temporal Analysis},
-    author={Zhiyan Security Lab},
+    author={Zihan Luo},
     year={2026},
     note={arXiv preprint, cs.CR}
 }
