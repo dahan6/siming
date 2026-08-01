@@ -1,100 +1,89 @@
 #!/usr/bin/env python3
-"""Detect anomaly patterns in a syscall trace.
-
-Usage:
-    python3 detector/detect_in_trace.py <trace_file> [--vocab VOCAB] [--ngram N]
+"""轨迹检测：对一份 VM tracee 文件跑三网融合，输出告警数与命中技术号。
+用法: detect_in_trace.py <model_dir> <trace.jsonl>
+输出最后一行 JSON: {"alerts": N, "proto_hits": [...], "pattern_hits": [...]}
 """
 import json
+import os
 import sys
-from pathlib import Path
-from collections import Counter
 
-DEFAULT_VOCAB = "models/vm-universal/vocab.json"
-DEFAULT_NGRAM = 4
+import torch
 
-# Minimum count for a pattern to be considered anomalous
-MIN_ANOMALY_COUNT = 3
-# Maximum frequency ratio (pattern_count / total_ngrams) to be suspicious
-MAX_NORMAL_RATIO = 0.30
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from parse_raw_tracee import event_to_tokens
+from pattern_db import PatternDB
+from proto_head import embed_sequence
+from train_prior import CTX, DEVICE, TinyGPT
 
 
-def load_vocab(path):
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def ngrams(seq, n):
-    return [tuple(seq[i:i+n]) for i in range(len(seq) - n + 1)]
+def slot_of(tok):
+    if ":" in tok:
+        return tok.split(":")[0]
+    if tok.startswith("ARGV"):
+        return "ARGV"
+    if tok.startswith("DT"):
+        return "DT"
+    return tok
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
+    model_dir, trace = sys.argv[1], sys.argv[2]
+    ckpt = torch.load(os.path.join(model_dir, "prior.pt"), map_location=DEVICE, weights_only=False)
+    stoi = ckpt["stoi"]
+    model = TinyGPT(len(stoi)).to(DEVICE)
+    model.load_state_dict(ckpt["model"])
+    model.eval()
+    det = os.path.dirname(os.path.abspath(__file__))
+    slot_tau = json.load(open(os.path.join(model_dir, "slot_tau.json")))["slot_tau"]
+    db = PatternDB(os.path.join(det, "patterns.jsonl"))
+    proto = json.load(open(os.path.join(det, "prototypes.jsonl")))
+    P = {t: (torch.tensor(v["prototypes"]).to(DEVICE), v["radii"][0])
+         for t, v in proto["techniques"].items()}
 
-    trace_file = sys.argv[1]
-    vocab_path = DEFAULT_VOCAB
-    n = DEFAULT_NGRAM
-
-    if "--vocab" in sys.argv:
-        vocab_path = sys.argv[sys.argv.index("--vocab") + 1]
-    if "--ngram" in sys.argv:
-        n = int(sys.argv[sys.argv.index("--ngram") + 1])
-
-    vocab = set(load_vocab(vocab_path))
-
-    # Read trace
-    trace = []
-    with open(trace_file, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
+    events = []
+    for line in open(trace, errors="replace"):
+        if line.strip().startswith("{"):
             try:
-                rec = json.loads(line)
-                if "syscall" in rec:
-                    trace.append(rec["syscall"])
-                elif "name" in rec:
-                    trace.append(rec["name"])
+                events.append(json.loads(line))
             except json.JSONDecodeError:
-                # Plain text: one syscall per line
-                trace.append(line)
+                pass
 
-    if not trace:
-        print(f"Empty trace: {trace_file}")
-        sys.exit(0)
+    window, prev_ts = [], None
+    alerts = 0
+    proto_hits, pattern_hits = set(), set()
+    for ev in events:
+        ts = ev.get("timestamp", 0)
+        delta = 0 if prev_ts is None else max(0, (ts - prev_ts) // 1_000_000)
+        prev_ts = ts
+        toks = event_to_tokens(ev, delta)
+        ids = [stoi.get(t, 0) for t in toks]
+        window = (window + ids)[-CTX:]
+        n, L = len(ids), len(window)
+        start = max(L - n, 1)
+        with torch.no_grad():
+            x = torch.tensor(window, device=DEVICE).unsqueeze(0)
+            lp = torch.log_softmax(model(x), dim=-1)[0]
+            tgt = torch.tensor(window[start:L], device=DEVICE)
+            nll = -lp[start - 1:L - 1].gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
+        fired = any(v > slot_tau.get(slot_of(t), 1.0) for t, v in zip(toks, nll.tolist()))
+        n_unk = any(t not in stoi for t in toks)
+        hits = db.match(toks)
+        e = embed_sequence(model, stoi, toks)
+        phit = None
+        for t, (ps, r) in P.items():
+            if (ps - e).norm(dim=1).min().item() <= r:
+                phit = t
+                break
+        if fired or n_unk or hits or phit:
+            alerts += 1
+        for h in hits:
+            pattern_hits.add(h["technique"])
+        if phit:
+            proto_hits.add(phit)
 
-    # Compute n-gram statistics
-    grams = ngrams(trace, n)
-    counts = Counter(grams)
-    total = len(grams)
-
-    anomalies = []
-    for gram, count in counts.most_common():
-        ratio = count / total
-        in_vocab = any(
-            " ".join(gram[i:i+n]) in vocab for i in range(len(gram) - n + 1)
-        ) if len(gram) > n else " ".join(gram) in vocab
-
-        if count >= MIN_ANOMALY_COUNT and ratio > MAX_NORMAL_RATIO:
-            anomalies.append({
-                "pattern": list(gram),
-                "count": count,
-                "ratio": round(ratio, 4),
-                "in_vocab": in_vocab,
-            })
-
-    result = {
-        "trace_file": trace_file,
-        "trace_length": len(trace),
-        "ngram_order": n,
-        "total_ngrams": total,
-        "unique_ngrams": len(counts),
-        "anomalies": anomalies,
-        "status": "ANOMALOUS" if anomalies else "CLEAN",
-    }
-
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    print(json.dumps({"alerts": alerts, "proto_hits": sorted(proto_hits),
+                      "pattern_hits": sorted(pattern_hits), "events": len(events)},
+                     ensure_ascii=False))
 
 
 if __name__ == "__main__":

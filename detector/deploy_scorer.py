@@ -1,440 +1,181 @@
 #!/usr/bin/env python3
-"""Siming 常驻评分服务
+"""部署打分守护 v3：五网融合（稀有度 + 上下文 + 模式库 + 时序 + 自适应）
+尾随 host_tracee.jsonl，对新增事件打分告警；每轮从上次偏移量续读。
 
-加载 VM-Universal 模型，对宿主级多特征流做在线评分。
-同时兼容单特征流（session 模式）。
-输出: anomaly_alerts.jsonl / anomaly_alerts.jsonl.siming / anomaly_alerts.jsonl.enriched
+判定逻辑（优先级从高到低，同一事件只出一条告警）：
+  P0 自适应行为 —— adaptive_detector 高危（morphological transformation/伪装C2/SUID提权）
+  P1 模式命中   —— patterns.jsonl 字段级匹配（已知坏，带 ATT&CK 技术号）
+  P2 上下文异常 —— PARENT/DST/DT 槽位超分维度 τ（组合不对）
+  P3 稀有度异常 —— PROC/ARGV 槽位超 τ 或 UNK（没见过）
+  P4 时序异常   —— temporal_analyzer 机器节奏（CV<1.5）
+  P5 自适应低危 —— adaptive_detector 低危（sleep步进/侦察轮换）
 
-Usage:
-    python3 detector/deploy_scorer.py [--tail]
-    echo '<json>' | python3 detector/deploy_scorer.py
+用法: deploy_scorer.py <model_dir> [--src 原始jsonl] [--state 状态文件]
+       [--alerts 告警文件] [--patterns 模式库]
 """
 import json
-import math
 import os
 import sys
 import time
-from pathlib import Path
 
-# ============================================================
-# Config
-# ============================================================
-MODELS_DIR = Path(os.environ.get("SIMING_MODELS_DIR", "models/vm-universal"))
-DATA_DIR = Path(os.environ.get("SIMING_DATA_DIR", "data"))
-DETECTOR_DIR = Path(__file__).parent
-NGRAM_ORDER = 4
+import torch
 
-ALERT_TAU = 0.80     # write alert to log
-SYSLOG_TAU = 0.90    # write to syslog
+from parse_raw_tracee import event_to_tokens
+from pattern_db import PatternDB
+from train_prior import TinyGPT, CTX
+from temporal_analyzer import TemporalAnalyzer
+from adaptive_detector import AdaptiveDetector
 
-VOCAB_PATH = MODELS_DIR / "vocab.json"
-PATTERN_DB_PATH = MODELS_DIR / "patterns.jsonl"
-SCHEMA_PATH = MODELS_DIR / "schema.json"
-PROTOTYPES_PATH = MODELS_DIR / "prototypes.jsonl"
-LOCAL_SCORER_PATH = DETECTOR_DIR / "adaptive_detector.py"
-HOST_MAP_PATH = DETECTOR_DIR / "host_feature_map.json"
-ATOMIC_MAP_PATH = DETECTOR_DIR / "atomic_sequence_map.json"
-LOCAL_TAU_PATH = MODELS_DIR / "slot_tau_local.json"
-VM_TAU_PATH = MODELS_DIR / "slot_tau_vm.json"
-OUTPUT_PATH = Path("anomaly_alerts.jsonl")
-SIMING_OUTPUT_PATH = Path("anomaly_alerts.jsonl.siming")
-ENRICHED_OUTPUT_PATH = Path("anomaly_alerts.jsonl.enriched")
-
-HOST_FEATURES = {
-    "session_count",
-    "new_uid",
-    "new_gid",
-    "new_exe",
-    "net_connect",
-    "net_dns",
-    "net_bind",
-    "net_listen",
-    "session_uid_switch",
-    "session_gid_change",
-    "session_new_exe",
-    "session_net_connect",
-    "session_net_dns",
-    "net_connect_success",
-    "net_connect_denied",
-    "net_bind_success",
-    "net_listen_success",
-    "dns_high_entropy",
-    "dns_long_name",
-    "suid_sgid",
-    "file_write",
-    "file_write_tmp",
-    "file_write_etc",
-    "file_write_bin",
-    "file_write_hidden",
-    "file_hidden",
-    "file_tmp",
-    "fs_mount",
-    "fs_umount",
-    "kernel_module",
-    "kernel_bpf",
-    "kernel_ptrace",
-    "kernel_kexec",
-    "kernel_memfd",
-    "kernel_perf",
-    "session_multi_uid",
-    "session_new_uid",
-    "root_session",
-    "session_net_bind",
-    "session_net_listen",
-}
-
-ATOMIC_FEATURES = {
-    "atomic_pattern_match",
-    "session_multi_uid",
-    "root_session",
-    "atomic_multi_uid",
-    "atomic_root_session",
-}
-
-BUILTIN_CATEGORY_MAP = {
-    "shellcode": "remote_code",
-    "shell": "remote_code",
-    "decoder": "credential_access",
-    "syscall_exploit": "privilege_escalation",
-    "normal_sys_calls": "execution",
-    "client": "execution",
-    "backdoor": "persistence",
-    "passwords": "credential_access",
-    "file_access": "collection",
-    "dldr": "execution",
-    "ftp": "exfiltration",
-    "http": "exfiltration",
-    "java": "execution",
-    "perl": "execution",
-    "ps": "discovery",
-    "xterm": "execution",
-}
-
-CATEGORY_MAP = dict(BUILTIN_CATEGORY_MAP)
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+ALPHA = 0.3
+CTX_SLOTS = {"PARENT", "DST", "DT"}   # 上下文维度
+RARE_SLOTS = {"PROC", "ARGV"}          # 稀有度维度（ET 主要是突发噪声，只做参考不报警）
 
 
-def norm_feature_name(raw):
-    name = raw.split("#", 1)[-1]
-    if ":" in name:
-        name = name.split(":", 1)[0]
-    return name
-
-
-def load_json(path, default=None):
-    try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return default
-
-
-def load_jsonl(path):
-    items = []
-    try:
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    items.append(json.loads(line))
-    except Exception:
-        pass
-    return items
-
-
-def load_category_map():
-    global CATEGORY_MAP
-    CATEGORY_MAP = dict(BUILTIN_CATEGORY_MAP)
-    if HOST_MAP_PATH.exists():
-        data = load_json(HOST_MAP_PATH, {})
-        cmap = data.get("category_map") if isinstance(data, dict) else None
-        if isinstance(cmap, dict):
-            for k, v in cmap.items():
-                if isinstance(k, str) and isinstance(v, str):
-                    CATEGORY_MAP[k] = v
-
-
-def load_atomic_slot_map():
-    if not ATOMIC_MAP_PATH.exists():
-        return {}
-    data = load_json(ATOMIC_MAP_PATH, {})
-    if isinstance(data, dict):
-        return {str(k): str(v) for k, v in data.items()}
-    return {}
-
-
-def canonical_slot(feature_name, atomic_slot_map=None):
-    """Map raw feature name to canonical slot name.
-
-    Handles both rich Tracee-style names and simplified agent names
-    (feat_ssh_pattern, feat_atomic_pattern_match, etc.).
-    """
-    name = norm_feature_name(feature_name)
-
-    # Simplified agent names → canonical slots
-    if name == "atomic_pattern_match":
-        return "atomic_pattern_match"
-    if name in ("session_count",):
-        return "session_count"
-    if name in ("ssh_pattern",):
-        return "net_connect"  # approximate: ssh pattern ≈ network
-    if name in ("sudo_pattern",):
-        return "suid_sgid"  # approximate: sudo ≈ privilege
-    if name in ("generic_anomaly",):
-        return "session_count"  # fallback
-
-    if name in HOST_FEATURES:
-        return name
-    if name in ATOMIC_FEATURES:
-        if atomic_slot_map and name in atomic_slot_map:
-            return atomic_slot_map[name]
-        if name in ("session_multi_uid", "atomic_multi_uid"):
-            return "new_uid"
-        if name in ("root_session", "atomic_root_session"):
-            return "net_connect"
-        return name
-    if name in ("file_access", "file_event", "file_meta"):
-        return "file_write"
-    if name == "memfd":
-        return "kernel_memfd"
-    if name == "ptrace":
-        return "kernel_ptrace"
-    if name == "bpf":
-        return "kernel_bpf"
-    if name == "module":
-        return "kernel_module"
-    if name == "kexec":
-        return "kernel_kexec"
-    if name == "perf":
-        return "kernel_perf"
-    if name.startswith("net_"):
-        return name
-    if name.startswith("kernel_"):
-        return name
-    if name.startswith("fs_"):
-        return name
-    if name.startswith("file_"):
-        return name
-    if name.startswith("session_"):
-        return name
-    if name.startswith("dns_"):
-        return name
-    return "session_count"
-
-
-# ============================================================
-# Load models
-# ============================================================
-print("Loading Siming models...", file=sys.stderr)
-vocab = load_json(VOCAB_PATH, [])
-patterns = load_jsonl(PATTERN_DB_PATH)
-prototypes = load_jsonl(PROTOTYPES_PATH)
-schema = load_json(SCHEMA_PATH, {})
-
-if not vocab:
-    print(f"Warning: empty vocab at {VOCAB_PATH}", file=sys.stderr)
-
-if schema:
-    print(f"Schema: n={schema.get('ngram_order')}, "
-          f"vocab={schema.get('vocab_size')}, "
-          f"covers={schema.get('covers')}", file=sys.stderr)
-
-# Load category map and atomic slot map
-load_category_map()
-atomic_slot_map = load_atomic_slot_map()
-
-# Load tau tables
-local_tau = load_json(LOCAL_TAU_PATH, {})
-vm_tau = load_json(VM_TAU_PATH, {})
-local_tau_table = local_tau.get("slot_tau", {}) if isinstance(local_tau, dict) else {}
-vm_tau_table = vm_tau.get("slot_tau", {}) if isinstance(vm_tau, dict) else {}
-
-print(f"Loaded {len(vocab)} vocab, {len(patterns)} patterns, "
-      f"{len(prototypes)} prototypes", file=sys.stderr)
-if local_tau_table:
-    print(f"Local tau table: {len(local_tau_table)} slots", file=sys.stderr)
-if vm_tau_table:
-    print(f"VM tau table: {len(vm_tau_table)} slots", file=sys.stderr)
-
-print("Models loaded", file=sys.stderr)
-
-
-# ============================================================
-# Scoring
-# ============================================================
-def score_event(event):
-    """Score a single event."""
-    text = " ".join(str(v) for v in event.values() if isinstance(v, str))
-    score = 0.0
-    if any(w in text.lower() for w in ("chmod", "chown", "setuid")):
-        score += 0.15
-    if any(w in text.lower() for w in ("/etc/passwd", "/etc/shadow")):
-        score += 0.3
-    if "curl" in text.lower() and "|" in text:
-        score += 0.25
-    if "nmap" in text.lower() or "ncat" in text.lower():
-        score += 0.2
-    return min(score, 1.0)
-
-
-def score_host_features(features):
-    """Score a vector of host-level features."""
-    if not isinstance(features, dict):
-        return 0.0
-
-    atomic_hits = 0
-    signal_count = 0
-    for k, v in features.items():
-        if not v:
-            continue
-        slot = canonical_slot(k, atomic_slot_map)
-        if slot == "atomic_pattern_match":
-            atomic_hits += 1
-        elif slot in HOST_FEATURES:
-            signal_count += 1
-
-    score = 0.0
-    score += min(0.15 * atomic_hits, 0.6)
-    score += min(0.05 * signal_count, 0.4)
-    return min(score, 1.0)
-
-
-def compute_risk(local_score, host_score, features):
-    """Combine local and host scores into final risk."""
-    risk = max(local_score, host_score)
-
-    if isinstance(features, dict):
-        if features.get("atomic_pattern_match"):
-            risk = max(risk, 0.75)
-        if features.get("session_multi_uid") or features.get("atomic_multi_uid"):
-            risk = max(risk, 0.70)
-        if features.get("kernel_module") or features.get("kernel_bpf"):
-            risk = max(risk, 0.80)
-        if features.get("kernel_ptrace"):
-            risk = max(risk, 0.70)
-
-    return round(min(risk, 1.0), 4)
-
-
-def assign_category(features):
-    """Assign an attack category based on triggered features."""
-    if not isinstance(features, dict):
-        return "unknown"
-
-    triggered = set()
-    for k, v in features.items():
-        if v:
-            triggered.add(norm_feature_name(k))
-
-    # Priority rules
-    if triggered & {"kernel_module", "kernel_bpf", "kernel_kexec"}:
-        return "privilege_escalation"
-    if triggered & {"kernel_ptrace", "kernel_memfd"}:
-        return "defense_evasion"
-    if triggered & {"new_uid", "session_multi_uid", "suid_sgid"}:
-        return "privilege_escalation"
-    if triggered & {"net_connect", "net_dns", "session_net_connect"}:
-        return "command_and_control"
-    if triggered & {"file_write_etc", "file_write_bin"}:
-        return "persistence"
-    if triggered & {"atomic_pattern_match"}:
-        return "execution"
-    if triggered & {"file_write_tmp", "file_write_hidden"}:
-        return "defense_evasion"
-    if triggered & {"fs_mount", "fs_umount"}:
-        return "defense_evasion"
-    return "unknown"
-
-
-# ============================================================
-# Main loop
-# ============================================================
-def process_stream(stream, output_path, siming_path, enriched_path):
-    """Process JSONL events from stream."""
-    n_processed = 0
-    n_alerts = 0
-
-    with open(output_path, "a", encoding="utf-8") as f_out, \
-         open(siming_path, "a", encoding="utf-8") as f_siming, \
-         open(enriched_path, "a", encoding="utf-8") as f_enriched:
-
-        for line in stream:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-
-            n_processed += 1
-
-            # Score
-            local_score = score_event(event)
-            features = event.get("features", {})
-            host_score = score_host_features(features)
-            risk = compute_risk(local_score, host_score, features)
-            category = assign_category(features)
-
-            if risk >= ALERT_TAU:
-                n_alerts += 1
-                alert = {
-                    "timestamp": event.get("timestamp", ""),
-                    "event_id": event.get("event_id", ""),
-                    "hostname": event.get("hostname", ""),
-                    "risk": risk,
-                    "category": category,
-                    "local_score": local_score,
-                    "host_score": host_score,
-                    "features_triggered": [
-                        k for k, v in features.items() if v
-                    ] if isinstance(features, dict) else [],
-                    "event": event,
-                }
-                f_out.write(json.dumps(alert, ensure_ascii=False) + "\n")
-                f_out.flush()
-
-                if risk >= SYSLOG_TAU:
-                    print(f"[ALERT] risk={risk:.4f} category={category} "
-                          f"host={event.get('hostname', '?')} "
-                          f"event={event.get('event_id', '?')}",
-                          file=sys.stderr)
-
-    return n_processed, n_alerts
+def slot_of(tok):
+    if ":" in tok:
+        return tok.split(":")[0]
+    if tok.startswith("ARGV"):
+        return "ARGV"
+    if tok.startswith("DT"):
+        return "DT"
+    return tok
 
 
 def main():
-    tail_mode = "--tail" in sys.argv
+    model_dir = sys.argv[1]
+    args = sys.argv[2:]
 
-    if tail_mode:
-        # Watch for new events
-        input_path = sys.argv[sys.argv.index("--tail") + 1] \
-            if sys.argv.index("--tail") + 1 < len(sys.argv) else "events.jsonl"
-        print(f"Tailing {input_path}...", file=sys.stderr)
+    def opt(name, default):
+        return args[args.index(name) + 1] if name in args else default
 
-        last_size = 0
-        while True:
+    src = opt("--src", os.path.expanduser("~/siming/telemetry/tracee.jsonl"))
+    state_path = opt("--state", os.path.join(model_dir, "scorer_state.json"))
+    alerts_path = opt("--alerts", os.path.expanduser("~/siming/data/alerts.jsonl"))
+    patterns_path = opt("--patterns", os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                   "patterns.jsonl"))
+
+    ckpt = torch.load(os.path.join(model_dir, "prior.pt"), map_location=DEVICE, weights_only=False)
+    stoi = ckpt["stoi"]
+    model = TinyGPT(len(stoi)).to(DEVICE)
+    model.load_state_dict(ckpt["model"])
+    model.eval()
+    # τ 优先级：slot_tau_local.json（onboard 标定的）> slot_tau_vm.json > slot_tau.json
+    for tau_name in ("slot_tau_local.json", "slot_tau_vm.json", "slot_tau.json"):
+        tau_path = os.path.join(model_dir, tau_name)
+        if os.path.exists(tau_path):
+            slot_tau = json.load(open(tau_path))["slot_tau"]
+            break
+    db = PatternDB(patterns_path)
+    temporal = TemporalAnalyzer(min_samples=20)
+    adaptive = AdaptiveDetector(window_size=200, cooldown=50)
+
+    state = {"offset": 0, "window": [], "ewma": 0.0, "prev_ts": None}
+    if os.path.exists(state_path):
+        state.update(json.load(open(state_path)))
+
+    n_scored = 0
+    n_alert = {"P0": 0, "P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
+    with open(src, errors="replace") as f:
+        f.seek(state["offset"])
+        for line in f:
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
             try:
-                current_size = os.path.getsize(input_path)
-                if current_size > last_size:
-                    with open(input_path, encoding="utf-8") as f:
-                        f.seek(last_size)
-                        n, a = process_stream(
-                            f, OUTPUT_PATH, SIMING_OUTPUT_PATH,
-                            ENRICHED_OUTPUT_PATH)
-                        if n:
-                            print(f"Processed {n} events, {a} alerts",
-                                  file=sys.stderr)
-                    last_size = current_size
-                time.sleep(2)
-            except FileNotFoundError:
-                time.sleep(5)
-            except KeyboardInterrupt:
-                break
-    else:
-        n, a = process_stream(
-            sys.stdin, OUTPUT_PATH, SIMING_OUTPUT_PATH,
-            ENRICHED_OUTPUT_PATH)
-        print(f"Processed {n} events, {a} alerts", file=sys.stderr)
+                ev = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            ts = ev.get("timestamp", 0)
+            delta = 0 if state["prev_ts"] is None else max(0, (ts - state["prev_ts"]) // 1_000_000)
+            state["prev_ts"] = ts
+            tokens = event_to_tokens(ev, delta)
+            ids = [stoi.get(t, 0) for t in tokens]
+            window = (state["window"] + ids)[-CTX:]
+            state["window"] = window
+            n, L = len(ids), len(window)
+            start = max(L - n, 1)
+            with torch.no_grad():
+                x = torch.tensor(window, device=DEVICE).unsqueeze(0)
+                lp = torch.log_softmax(model(x), dim=-1)[0]
+                tgt = torch.tensor(window[start:L], device=DEVICE)
+                nll = -lp[start - 1:L - 1].gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
+            s_ev = nll.max().item()
+            state["ewma"] = ALPHA * s_ev + (1 - ALPHA) * state["ewma"]
+            n_scored += 1
+
+            # 分维度判定
+            fired = []   # (slot, token, nll)
+            for t, v in zip(tokens, nll.tolist()):
+                s = slot_of(t)
+                if v > slot_tau.get(s, 1.0):
+                    fired.append((s, t, round(v, 2)))
+            n_unk = sum(1 for t in tokens if t not in stoi)
+            ctx_fired = [x for x in fired if x[0] in CTX_SLOTS]
+            rare_fired = [x for x in fired if x[0] in RARE_SLOTS]
+
+            # 模式匹配
+            hits = db.match(tokens)
+            patterns = [{"id": h["id"], "technique": h["technique"],
+                         "severity": h["severity"], "name": h["name"]} for h in hits]
+
+            # 自适应检测（需要 8-token，补 PC 槽）
+            tokens_8 = list(tokens)
+            # 在 DST 后插 PC（如果还没有）
+            if not any(t.startswith("PC:") for t in tokens_8):
+                dst_idx = next((i for i, t in enumerate(tokens_8)
+                                if t.startswith("DST:")), 5)
+                tokens_8.insert(dst_idx + 1, "PC:NONE")
+            adapt_alerts = adaptive.update(tokens_8, ts=ts)
+            adapt_p5 = [a for a in adapt_alerts if a["severity"] >= 5]
+            adapt_low = [a for a in adapt_alerts if a["severity"] < 5]
+
+            # 时序分析
+            proc_tok = next((t for t in tokens if t.startswith("PROC:")), "PROC:?")
+            proc_name = proc_tok.split(":", 1)[1] if ":" in proc_tok else "?"
+            uid_tok = next((t for t in tokens if t.startswith("UID:")), "UID:?")
+            uid_val = uid_tok.split(":", 1)[1] if ":" in uid_tok else "?"
+            temporal_result = temporal.update(proc_name, ts, state["ewma"], uid=uid_val)
+
+            # 融合判定：P0自适应高危 > P1模式 > P2上下文 > P3稀有度 > P4时序 > P5自适应低危
+            if adapt_p5:
+                prio = "P0"
+            elif patterns:
+                prio = "P1"
+            elif ctx_fired:
+                prio = "P2"
+            elif rare_fired or n_unk > 0:
+                prio = "P3"
+            elif temporal_result and temporal_result["verdict"] == "anomalous":
+                prio = "P4"
+            elif adapt_low:
+                prio = "P5"
+            else:
+                continue
+
+            n_alert[prio] += 1
+            alert_rec = {
+                "ts": ts, "prio": prio,
+                "patterns": patterns or None,
+                "fired_dims": [f"{t}:{v}" for _, t, v in fired] or None,
+                "s_ev": round(s_ev, 3), "ewma": round(state["ewma"], 3),
+                "n_unk": n_unk, "tokens": tokens,
+            }
+            if adapt_p5:
+                alert_rec["adaptive"] = adapt_p5
+            if adapt_low:
+                alert_rec["adaptive_low"] = adapt_low
+            if temporal_result and temporal_result["verdict"] != "normal":
+                alert_rec["temporal"] = temporal_result
+            with open(alerts_path, "a") as af:
+                af.write(json.dumps(alert_rec, ensure_ascii=False) + "\n")
+        state["offset"] = f.tell()
+
+    json.dump(state, open(state_path, "w"))
+    print(f"[{time.strftime('%F %T')}] 打分 {n_scored} 事件 | "
+          f"P0={n_alert['P0']} P1={n_alert['P1']} P2={n_alert['P2']} "
+          f"P3={n_alert['P3']} P4={n_alert['P4']} P5={n_alert['P5']} "
+          f"-> {alerts_path}")
 
 
 if __name__ == "__main__":
