@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""Siming one-click deployment script (司命一键部署脚本)
+"""司命一键部署脚本
 
-Full deployment flow on a new machine:
-1. Check dependencies (Python3, torch, numpy)
-2. Select/create model directory
-3. Collect benign baseline (or use the universal model)
-4. Calibrate slot_tau
-5. Start deploy_scorer
+在新机器上的完整部署流程：
+1. 检查依赖（Python3, torch, numpy）
+2. 选择/创建模型目录
+3. 采集良性基线（或使用通用模型）
+4. 标定 slot_tau
+5. 启动 deploy_scorer
 
-Usage:
-  ./deploy_siming.py install          # install dependencies
-  ./deploy_siming.py init <tracee_src>  # initialize (extract + calibrate)
-  ./deploy_siming.py start [--src <tracee.jsonl>] [--alerts <alerts.jsonl>]
-                                       # start detection daemon
-  ./deploy_siming.py stop              # stop
-  ./deploy_siming.py status            # show status
-  ./deploy_siming.py test <jsonl>      # offline test
+用法:
+  ./deploy_siming.py install          # 安装依赖
+  ./deploy_siming.py init <tracee_src>  # 初始化（采集+标定）
+  ./deploy_siming.py start             # 启动检测守护
+  ./deploy_siming.py stop              # 停止
+  ./deploy_siming.py status            # 查看状态
+  ./deploy_siming.py test <jsonl>      # 离线测试
 """
 import json
 import os
@@ -36,13 +35,9 @@ def cmd(*args, check=True):
     return r.stdout.strip()
 
 
-REPO_ROOT = os.path.dirname(DET)
-
-
 def get_model_dir():
-    """Priority: <repo>/models/vm-universal > model-vm-universal > model-current > model-host-r3-clean"""
+    """优先级：model-vm-universal > model-current > model-host-r3-clean"""
     candidates = [
-        os.path.join(REPO_ROOT, "models", "vm-universal"),
         os.path.join(DET, "model-vm-universal"),
         os.path.join(DET, "model-current"),
         os.path.join(DET, "model-host-r3-clean"),
@@ -135,35 +130,19 @@ def do_init(tracee_src=None):
     os.system(cmd)
 
 
-def default_alerts_path():
-    p = os.path.join(HOME, "siming", "data")
-    os.makedirs(p, exist_ok=True)
-    return os.path.join(p, "alerts.jsonl")
-
-
-def do_start(src=None, alerts=None):
+def do_start():
     """启动 deploy_scorer 守护"""
     model_dir = get_model_dir()
     if not model_dir:
         print("ERROR: 无可用模型")
         sys.exit(1)
 
-    if not src:
-        # default telemetry locations (tracee JSONL stream)
-        for cand in [
-            os.path.join(HOME, "siming", "telemetry", "tracee.jsonl"),
-            os.path.join(REPO_ROOT, "data", "tracee.jsonl"),
-        ]:
-            if os.path.exists(cand):
-                src = cand
-                break
-    if not src:
-        print("ERROR: 未找到遥测数据源。请用 --src 指定 tracee JSONL 文件：")
-        print("  ./deploy_siming.py start --src /path/to/tracee.jsonl")
-        sys.exit(1)
+    src = os.path.join(HOME, "defense-lab", "data", "host_tracee.jsonl")
+    if not os.path.exists(src):
+        # 尝试 lado-range 路径
+        src = os.path.join(HOME, "lado-range", "telemetry", "tracee.jsonl")
 
-    if not alerts:
-        alerts = default_alerts_path()
+    alerts = os.path.join(HOME, "defense-lab", "data", "alerts.jsonl")
     state = os.path.join(model_dir, "scorer_state.json")
 
     print(f"模型: {model_dir}")
@@ -216,7 +195,7 @@ def do_status():
                 print(f"  ✅ {f} ({size} bytes, {mtime})")
 
     # 告警统计
-    alerts = default_alerts_path()
+    alerts = os.path.join(HOME, "defense-lab", "data", "alerts.jsonl")
     if os.path.exists(alerts):
         n = sum(1 for _ in open(alerts))
         print(f"\n告警总数: {n}")
@@ -243,14 +222,7 @@ def main():
         tracee_src = sys.argv[2] if len(sys.argv) > 2 else None
         do_init(tracee_src)
     elif action == "start":
-        src = alerts = None
-        args = sys.argv[2:]
-        for i, a in enumerate(args):
-            if a == "--src" and i + 1 < len(args):
-                src = args[i + 1]
-            elif a == "--alerts" and i + 1 < len(args):
-                alerts = args[i + 1]
-        do_start(src=src, alerts=alerts)
+        do_start()
     elif action == "stop":
         do_stop()
     elif action == "status":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Siming M1: 遥测解析器
+"""LADO 靶场检测器 M1: 遥测解析器
 把 rsyslog 汇聚的 tracee 事件解析为离散 token 流（JSONL）。
 
 每事件 7 个 token: [ET][PROC][ARGV_SKEL][PARENT][UID][DST][DT]
@@ -10,25 +10,10 @@ import re
 import sys
 import glob
 import os
-import ipaddress
 
 BASE64ISH = re.compile(r"^[A-Za-z0-9+/=]{20,}$")
 HAS_URL = re.compile(r"https?://")
 HAS_IP = re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
-
-# LAN classification: RFC1918/link-local addresses count as LAN. Override with
-# SIMING_LAN_PREFIX (e.g. "10.0.0.") to restrict LAN to a specific subnet.
-LAN_PREFIX = os.environ.get("SIMING_LAN_PREFIX")
-
-
-def _is_lan(ip):
-    if LAN_PREFIX:
-        return ip.startswith(LAN_PREFIX)
-    try:
-        addr = ipaddress.ip_address(ip)
-        return addr.is_private or addr.is_loopback or addr.is_link_local
-    except ValueError:
-        return False
 
 # 敏感路径分类：ARGV 骨架(N1P)会抹平"写哪个文件"，PATHCLASS 补回这个维度
 # 动机：原型学习中 tee→rc.local / tee→~/.bashrc / tee→ld.so.preload 三个技术不可分
@@ -101,9 +86,9 @@ def dst_token(event_name, args):
     if pm:
         port = int(pm.group(1))
     pc = "WELL" if port in (22, 53, 80, 443, 514, 123) else "HIGH"
-    if _is_lan(ip):
+    if ip.startswith("10.100.0."):
         return f"DST:LAN:{pc}"
-    return f"DST:EXT:{pc}"  # external connection from an isolated host = strong signal
+    return f"DST:EXT:{pc}"  # 隔离网内理论上不应出现，出现即强信号
 
 
 def parse_line(line):
@@ -139,9 +124,9 @@ def event_to_tokens(event, delta_ms):
 
 
 def main():
-    in_glob = sys.argv[1] if len(sys.argv) > 1 else "/var/log/siming/*/*.log"
+    in_glob = sys.argv[1] if len(sys.argv) > 1 else "/var/log/lado-range/*/*.log"
     out_path = sys.argv[2] if len(sys.argv) > 2 else os.path.expanduser(
-        "~/siming/detector/data/tokens.jsonl")
+        "~/lado-range/detector/data/tokens.jsonl")
 
     # 收集 (epoch_ns, ts_iso, host, event) 并全局排序，保证 ΔT 正确
     records = []

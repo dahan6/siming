@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Siming M2 配套: 事件流打分
+"""LADO 靶场检测器 M2 配套: 事件流打分
 加载 prior.pt，对 token 流逐事件计算惊讶度（事件内 token NLL 取 max），
 EWMA 聚合为窗口分，按基线 p995 阈值判定异常。
 
@@ -22,7 +22,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("tokens")
     ap.add_argument("--top", type=int, default=15)
-    ap.add_argument("--model", default=os.path.expanduser("~/siming/models/prior.pt"))
+    ap.add_argument("--model", default=os.path.expanduser("~/lado-range/detector/model/prior.pt"))
     args = ap.parse_args()
 
     ckpt = torch.load(args.model, map_location=DEVICE, weights_only=False)

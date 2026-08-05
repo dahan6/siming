@@ -145,8 +145,8 @@ def run_pipeline(model_dir, events_path, hour_filter=None, n_max=50000,
 def experiment_ablation():
     """消融实验：逐层去除，看检测率和FPR变化"""
     model_dir = os.path.join(DET, "model-vm-universal")
-    clone = os.path.expanduser("~/data/telemetry/clone_events.jsonl")
-    regime = os.path.expanduser("~/data/telemetry/regime_events.jsonl")
+    clone = os.path.expanduser("~/adaptive-agent-sim/checkpoints/clone_events.jsonl")
+    regime = os.path.expanduser("~/adaptive-agent-sim/checkpoints/regime_events.jsonl")
 
     configs = [
         ("Full (5-layer)", True, True, True, True),
@@ -165,17 +165,17 @@ def experiment_ablation():
 
     results = []
     for name, ep, epa, et, ea in configs:
-        agent_n, agent_alert = run_pipeline(model_dir, regime, {"13"}, 50000,
+        bee_n, bee_alert = run_pipeline(model_dir, regime, {"13"}, 50000,
                                          enable_prior=ep, enable_pattern=epa,
                                          enable_temporal=et, enable_adaptive=ea)
         ben_n, ben_alert = run_pipeline(model_dir, clone, {"02","03","04","05"}, 20000,
                                          enable_prior=ep, enable_pattern=epa,
                                          enable_temporal=et, enable_adaptive=ea)
-        agent_rate = agent_alert / max(agent_n, 1) * 100
+        bee_rate = bee_alert / max(bee_n, 1) * 100
         ben_rate = ben_alert / max(ben_n, 1) * 100
-        disc = agent_rate - ben_rate
-        print(f"{name:<25} {agent_rate:>15.1f}% {ben_rate:>11.1f}% {disc:>+9.1f}%")
-        results.append({"config": name, "agent_rate": agent_rate, "benign_rate": ben_rate, "discrimination": disc})
+        disc = bee_rate - ben_rate
+        print(f"{name:<25} {bee_rate:>15.1f}% {ben_rate:>11.1f}% {disc:>+9.1f}%")
+        results.append({"config": name, "agent_rate": bee_rate, "benign_rate": ben_rate, "discrimination": disc})
 
     return results
 
@@ -259,7 +259,7 @@ def experiment_tau_sweep():
 
 def experiment_synthetic_detection():
     """合成攻击序列的完整检测率"""
-    from test_adaptive_synth import (test_morph_transform, test_disguise_c2,
+    from test_adaptive_synth import (test_rebirth_retire, test_disguise_c2,
                                       test_suid_privesc, test_exfil_memory,
                                       test_recon_uniform, test_sleep_stepping,
                                       test_benign_baseline)
@@ -269,7 +269,7 @@ def experiment_synthetic_detection():
     print("=" * 70)
 
     tests = [
-        ("Morphological Transformation", test_morph_transform),
+        ("Rebirth Sequence", test_rebirth_retire),
         ("Disguised C2 Exfil", test_disguise_c2),
         ("SUID Privilege Escalation", test_suid_privesc),
         ("Memory-only Exfiltration", test_exfil_memory),
@@ -297,7 +297,7 @@ def experiment_synthetic_detection():
 def experiment_cross_host():
     """跨机验证：留一 VM 验证"""
     model_dir = os.path.join(DET, "model-vm-universal")
-    clone = os.path.expanduser("~/data/telemetry/clone_events.jsonl")
+    clone = os.path.expanduser("~/adaptive-agent-sim/checkpoints/clone_events.jsonl")
 
     # 按host分组
     host_events = defaultdict(list)

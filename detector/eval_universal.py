@@ -166,16 +166,16 @@ def main():
         print(f"ERROR: {model_dir}/prior.pt 不存在")
         sys.exit(1)
 
-    clone = os.path.expanduser("~/data/telemetry/clone_events.jsonl")
-    regime = os.path.expanduser("~/data/telemetry/regime_events.jsonl")
+    clone = os.path.expanduser("~/adaptive-agent-sim/checkpoints/clone_events.jsonl")
+    regime = os.path.expanduser("~/adaptive-agent-sim/checkpoints/regime_events.jsonl")
 
     # 先标定
     print("=== 自动标定 slot_tau_local ===")
     os.system(f"cd {DET} && python3 onboard_v2.py {model_dir} data/onboard_benign.jsonl 2>&1 | tail -20")
 
     # 评估
-    agent = evaluate(model_dir, regime, hour_filter={"13"}, n_max=50000,
-                   label="adaptive agent活跃期")
+    bee = evaluate(model_dir, regime, hour_filter={"13"}, n_max=50000,
+                   label="隐翅虫活跃期")
     benign = evaluate(model_dir, clone, hour_filter={"02", "03", "04", "05"}, n_max=20000,
                       label="良性夜间")
 
@@ -183,11 +183,11 @@ def main():
     print(f"\n{'='*50}")
     print(f"  跨机验证汇总")
     print(f"{'='*50}")
-    print(f"{'指标':<20}{'adaptive agent':>12}{'良性':>12}")
+    print(f"{'指标':<20}{'隐翅虫':>12}{'良性':>12}")
     print(f"{'-'*44}")
-    print(f"{'FPR':<20}{agent['fpr']:>11.1f}%{benign['fpr']:>11.1f}%")
+    print(f"{'FPR':<20}{bee['fpr']:>11.1f}%{benign['fpr']:>11.1f}%")
     for p in ["P0", "P1", "P2", "P3", "P4", "P5"]:
-        b = agent["n_alert"].get(p, 0)
+        b = bee["n_alert"].get(p, 0)
         g = benign["n_alert"].get(p, 0)
         if b + g > 0:
             print(f"  {p:<18}{b:>12}{g:>12}")

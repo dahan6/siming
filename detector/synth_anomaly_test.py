@@ -48,7 +48,7 @@ def score_event(model, stoi, ctx_tokens, ev_tokens):
 
 def main():
     model_path = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
-        "~/siming/models/vm-universal/prior.pt")
+        "~/defense-lab/detector/model/prior.pt")
     ckpt = torch.load(model_path, map_location=DEVICE, weights_only=False)
     stoi = ckpt["stoi"]
     model = TinyGPT(len(stoi)).to(DEVICE)

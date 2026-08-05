@@ -6,7 +6,7 @@
 #   shadow_release.sh rollback                                  # 回滚到上一版本
 set -euo pipefail
 CMD="${1:?compare|promote|rollback}"
-DL=~/siming
+DL=~/defense-lab
 PY=~/miniconda3/envs/ai/bin/python
 CURRENT="$DL/detector/model-current"
 BACKUP="$DL/detector/model-previous"

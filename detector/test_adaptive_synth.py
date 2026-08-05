@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""合成攻击序列测试：验证 adaptive_detector 对 morphological/提权/窃取/C2 的检测
+"""合成攻击序列测试：验证 adaptive_detector 对 rebirth/提权/窃取/C2 的检测
 
-用adaptive agent v4 文档中的行为序列构造合成事件，喂给 AdaptiveDetector，
+用隐翅虫 v4 文档中的行为序列构造合成事件，喂给 AdaptiveDetector，
 验证各检测器是否正确触发。
 """
 import sys
@@ -20,16 +20,16 @@ def make_event(et, proc, argv, parent, uid, dst, pc, dt):
     ]
 
 
-def test_morphological_retire():
-    """Test morphological transformation sequence: cp→chmod→setsid→rm"""
-    print("\n=== Test: morphological transformation ===")
+def test_morph_transform():
+    """测试优雅退休重生序列：cp→chmod→setsid→rm"""
+    print("\n=== 测试: rebirth 优雅退休 ===")
     det = AdaptiveDetector(window_size=200, cooldown=1)
     # 前置正常事件
     for i in range(20):
         ev = make_event("EXEC", "sleep", "N1-", "bash", "1000", "NONE", "NONE", "1")
         det.update(ev, ts=f"2026-07-31T10:{i:02d}:00")
 
-    # morphological 序列
+    # rebirth 序列
     events = [
         make_event("EXEC", "cp", "N2P", "bash", "1000", "NONE", "TMP", "1"),
         make_event("EXEC", "chmod", "N2P", "bash", "1000", "NONE", "TMP", "0"),
@@ -40,13 +40,13 @@ def test_morphological_retire():
     for ev in events:
         alerts.extend(det.update(ev, ts=f"2026-07-31T11:00:0{len(alerts)}"))
 
-    morphological_hits = [a for a in alerts if a["type"] == "MORPH_TRANSFORM"]
-    if morphological_hits:
-        print(f"  ✅ MORPH_TRANSFORM 触发 ({len(morphological_hits)} 次)")
-        print(f"     detail: {morphological_hits[0]['detail']}")
+    rebirth_hits = [a for a in alerts if a["type"] == "MORPH_TRANSFORM"]
+    if rebirth_hits:
+        print(f"  ✅ MORPH_TRANSFORM 触发 ({len(rebirth_hits)} 次)")
+        print(f"     detail: {rebirth_hits[0]['detail']}")
     else:
         print(f"  ❌ MORPH_TRANSFORM 未触发")
-    return len(morphological_hits) > 0
+    return len(rebirth_hits) > 0
 
 
 def test_disguise_c2():
@@ -253,11 +253,11 @@ def test_benign_baseline():
 
 def main():
     print("=" * 60)
-    print("adaptive agent v4 合成攻击序列检测测试")
+    print("隐翅虫 v4 合成攻击序列检测测试")
     print("=" * 60)
 
     results = {}
-    results["morphological"] = test_morphological_retire()
+    results["rebirth"] = test_morph_transform()
     results["c2"] = test_disguise_c2()
     results["privesc"] = test_suid_privesc()
     results["exfil"] = test_exfil_memory()

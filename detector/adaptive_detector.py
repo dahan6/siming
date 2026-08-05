@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""自适应事件检测器：检测adaptive agent v4 的自适应行为模式
+"""自适应事件检测器：检测隐翅虫 v4 的自适应行为模式
 
 检测目标（从 v4 文档 + 21 轮实验提取）：
-1. morphological transformation sequence: cp→chmod→setsid→rm
+1. rebirth 重生序列：cp→chmod→setsid→rm（优雅退休）
 2. 伪装名池轮换：node/python3/go-build/cargo-watch 等开发工具名
 3. 侦察链均匀轮换：ss/ip/ps/ls/find/free/df/uptime 均匀分布
 4. C2 轮询：伪装进程 + EXT:HIGH 外联
@@ -19,10 +19,10 @@ from datetime import datetime
 
 DET = os.path.dirname(os.path.abspath(__file__))
 
-# adaptive agent v4 伪装名池
+# 隐翅虫 v4 伪装名池
 DISGUISE_POOL = {
     "node", "python3", "go-build", "cargo-watch", "dotnet", "ruby",
-    "java", "graalvm", "docker-credential", "kubectl", "terraform",  # Known disguise name pool
+    "java", "graalvm", "docker-credential", "kubectl", "terraform",
     "ansible-runner",
 }
 
@@ -33,8 +33,8 @@ RECON_CMDS = {
     "df", "wc", "du", "journalctl", "pgrep", "readlink",
 }
 
-# morphological transformation sequence pattern
-MORPH_SEQ = ["cp", "chmod", "setsid", "rm"]
+# rebirth 序列模式（优雅退休版）
+REBIRTH_SEQ = ["cp", "chmod", "setsid", "rm"]
 
 
 class AdaptiveDetector:
@@ -69,8 +69,8 @@ class AdaptiveDetector:
 
         raw_alerts = []
 
-        # Detection 1: morphological transformation sequence
-        a = self._detect_morph_transform()
+        # 检测 1: rebirth 序列
+        a = self._detect_rebirth()
         if a:
             raw_alerts.append(a)
 
@@ -120,25 +120,56 @@ class AdaptiveDetector:
                 ev[k] = v
         return ev
 
-    def _detect_morph_transform(self):
-        """Detect cp→chmod→setsid→rm transformation sequence"""
+    def _detect_rebirth(self):
+        """检测 cp→chmod→setsid→rm 序列（变体容忍版）
+
+        升级：允许中间插入 1-2 个噪声命令（sleep/dash/env 等），
+        用滑动窗口模糊匹配替代精确匹配。
+        """
         if len(self.events) < 4:
             return None
-        recent = list(self.events)[-10:]
+        recent = list(self.events)[-15:]  # 扩大窗口到 15
         procs = [e.get("PROC", "") for e in recent]
-        # 找连续子序列
-        for i in range(len(procs) - 3):
-            if procs[i:i+4] == MORPH_SEQ:
-                # 检查是否都在 TMP 路径
-                pcs = [recent[j].get("PC", "") for j in range(i, i+4)]
-                if any("TMP" in pc for pc in pcs):
-                    return {
-                        "type": "MORPH_TRANSFORM",
-                        "severity": 5,
-                        "technique": "T1070.004",
-                        "detail": f"morphological transformation sequence: {'→'.join(MORPH_SEQ)}",
-                        "ts": recent[i].get("ts"),
-                    }
+
+        # 噪声命令（允许插入的无关命令）
+        NOISE = {"sleep", "dash", "env", "date", "echo", "pwd", "whoami",
+                 "hostname", "uname", "sh", "bash"}
+
+        # 模糊匹配：在 15 事件窗口里找 4 个关键命令（顺序不变，中间可有噪声）
+        key_seq = ["cp", "chmod", "setsid", "rm"]
+        key_idx = 0
+        matched_positions = []
+        tmp_found = False
+
+        for i, proc in enumerate(procs):
+            if proc == key_seq[key_idx]:
+                matched_positions.append(i)
+                pc = recent[i].get("PC", "")
+                if "TMP" in pc:
+                    tmp_found = True
+                key_idx += 1
+                if key_idx == len(key_seq):
+                    # 全部匹配
+                    # 检查噪声数量：匹配位置之间允许最多 2 个噪声
+                    gaps = [matched_positions[j+1] - matched_positions[j] - 1
+                            for j in range(len(matched_positions)-1)]
+                    max_gap = max(gaps) if gaps else 0
+                    if max_gap <= 3 and tmp_found:
+                        return {
+                            "type": "MORPH_TRANSFORM",
+                            "severity": 5,
+                            "technique": "T1070.004",
+                            "detail": f"Transformation sequence: {'→'.join(key_seq)} (gaps={gaps})",
+                            "ts": recent[matched_positions[0]].get("ts"),
+                        }
+                    break
+            elif proc in NOISE:
+                continue  # 噪声命令，跳过
+            elif key_idx > 0 and proc not in key_seq[key_idx:]:
+                # 遇到非关键非噪声命令，重置
+                key_idx = 0
+                matched_positions = []
+
         return None
 
     def _detect_disguise_c2(self, ev):
@@ -156,6 +187,81 @@ class AdaptiveDetector:
             }
         return None
 
+    def _detect_sequence_fuzzy(self):
+        """通用模糊序列匹配（自动模式发现）
+
+        从 patterns.jsonl 中加载 sequence 条目，
+        用模糊匹配（允许噪声插入）检测攻击序列。
+        """
+        if not hasattr(self, '_seq_patterns'):
+            self._load_seq_patterns()
+        if not self._seq_patterns or len(self.events) < 3:
+            return None
+
+        recent = list(self.events)[-20:]
+        recent_procs = [e.get("PROC", "") for e in recent]
+
+        NOISE = {"sleep", "dash", "env", "date", "echo", "pwd", "whoami",
+                 "hostname", "uname", "sh", "bash"}
+
+        for pattern in self._seq_patterns:
+            key_procs = pattern["key_procs"]
+            technique = pattern.get("technique", "?")
+            severity = pattern.get("severity", 4)
+
+            key_idx = 0
+            matched = 0
+            for proc in recent_procs:
+                if proc == key_procs[key_idx]:
+                    matched += 1
+                    key_idx += 1
+                    if matched == len(key_procs):
+                        if severity >= 5:
+                            return {
+                                "type": f"PATTERN_{technique}",
+                                "severity": severity,
+                                "technique": technique,
+                                "detail": f"Fuzzy match: {'→'.join(key_procs)}",
+                                "ts": recent[-1].get("ts"),
+                            }
+                elif proc in NOISE:
+                    continue
+                elif key_idx > 0 and proc not in key_procs[key_idx:]:
+                    key_idx = 0
+                    matched = 0
+
+        return None
+
+    def _load_seq_patterns(self):
+        """从 patterns.jsonl 加载序列模式"""
+        import os as _os
+        self._seq_patterns = []
+        patterns_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "patterns.jsonl")
+        if not _os.path.exists(patterns_path):
+            return
+
+        for line in open(patterns_path):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            try:
+                e = json.loads(line)
+                if e.get("type") == "sequence" and e.get("review") == "approved":
+                    # 提取 PROC token 序列
+                    seq = e.get("sequence", [])
+                    key_procs = []
+                    for t in seq:
+                        if t.startswith("PROC:"):
+                            key_procs.append(t.split(":", 1)[1])
+                    if len(key_procs) >= 2:
+                        self._seq_patterns.append({
+                            "id": e.get("id", "?"),
+                            "technique": e.get("technique", "?"),
+                            "severity": e.get("severity", 4),
+                            "key_procs": key_procs,
+                        })
+            except:
+                continue
     def _detect_recon_uniform(self):
         """检测侦察命令均匀轮换（滑窗内 ≥6 种不同侦察命令，分布均匀）"""
         if len(self.events) < 30:

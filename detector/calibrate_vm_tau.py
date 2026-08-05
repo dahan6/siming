@@ -106,7 +106,7 @@ def main():
         model_dir = os.path.join(DET, "model-current")
 
     clone_path = os.path.expanduser(
-        "~/data/telemetry/clone_events.jsonl")
+        "~/adaptive-agent-sim/checkpoints/clone_events.jsonl")
 
     print(f"=== 在 VM 良性夜间数据上标定 slot_tau (模型: {os.path.basename(model_dir)}) ===\n")
     vm_tau = calibrate_vm(model_dir, clone_path,

@@ -1,188 +1,81 @@
-# Siming — Behavioral Grammar Detection Engine
+# 司命（Siming）— 行为语法检测引擎 v4
 
-**Behavioral Grammar: Detecting Adaptive Malware via Tiny Language Model Priors and Second-Order Temporal Analysis**
+**六网融合管道**：统计 + 语义 + 时序 + 自适应四层独立检测，交叉确认降误报。
 
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)]()
-[![Model](https://img.shields.io/badge/model-0.88M%20params%20%2F%203.6%20MB-green.svg)]()
-[![Paper](https://img.shields.io/badge/arXiv-cs.CR-b31b1b.svg)]()
-
-<p align="center"><b>Zihan Luo</b></p>
-
----
-
-## What is Siming?
-
-Siming is a host-based intrusion detection system that treats runtime behavior as a **structured language** and learns its "grammar" with a compact 0.88M-parameter causal Transformer (TinyGPT).
-
-Each system event is discretized into an **8-token representation**:
-
-```
-ET:EXEC  PROC:bash  ARGV:N1P  PC:NONE  PARENT:sshd  UID:1000  DST:NONE  DT3
-```
-
-The model learns the conditional distribution of normal behavior in a purely self-supervised manner. Anomaly scores are derived from per-slot negative log-likelihood (NLL) statistics, and each alert names the exact slot that violated the grammar — restoring the auditability that monolithic sequence models sacrifice.
-
-<p align="center">
-  <img src="docs/fig3_architecture.png" width="85%" alt="Siming architecture">
-</p>
-
-## Architecture: Five-Layer Fusion
-
-| Layer | Function | Priority |
-|-------|----------|----------|
-| **P0** | Adaptive high-risk patterns (morphological transformation, disguised C2, SUID privesc) | Critical |
-| **P1** | ATT&CK pattern matching + prototype network (96.2% leave-one-out) | High |
-| **P2** | Per-slot context anomaly (NLL > τ for PARENT/DST/DT) | Medium |
-| **P3** | Token rarity + unknown token detection | Medium |
-| **P4** | **Second-order temporal analysis** (CV < 1.5 = machine cadence) | **Strongest signal** |
-| **P5** | Adaptive low-risk patterns (sleep stepping, recon uniformity) | Low |
-
-## Key Results
-
-| Metric | Value |
-|--------|-------|
-| Detection rate vs adaptive agent | **93%** |
-| Onboarding FPR (p99.5) | **3.84%** |
-| Cross-host FPR (7 VMs avg) | **3.4%** |
-| Temporal CV separation | **0.31 vs 9.79** (30×) |
-| ATT&CK techniques covered | 14 (expanding to 50+) |
-| Model size | 0.88M params (3.6 MB) |
-| Inference | CPU real-time (<1 ms per event) |
-
-## Quick Start
+## 快速开始
 
 ```bash
-# 1. Install dependencies
-pip install torch numpy scikit-learn pyyaml
+# 安装
+pip install torch numpy scikit-learn
+sudo apt install auditd
 
-# 2. Check environment and files
-python3 detector/deploy_siming.py install
+# 启用 auditd execve 监控
+sudo auditctl -a always,exit -F arch=b64 -S execve -k exec_log
+sudo auditctl -a always,exit -F arch=b32 -S execve -k exec_log
 
-# 3. Initialize: extract tokens from a tracee JSONL log and calibrate slot τ
-#    (20 min of benign telemetry is enough)
-python3 detector/deploy_siming.py init /path/to/tracee.jsonl
+# 运行六网融合管道
+python detector/fusion_pipeline.py --eval data/audit_all.jsonl
 
-#    (alternative: calibrate the shipped universal model on your own baseline)
-python3 detector/onboard_v2.py models/vm-universal data/onboard_benign.jsonl
-
-# 4. Start the detection daemon against a live tracee stream
-python3 detector/deploy_siming.py start --src /path/to/tracee.jsonl
-
-# 5. Check status and alerts
-python3 detector/deploy_siming.py status
+# 新机器标定
+python detector/onboard_v2.py models/model-stat-v3 data/onboard_benign.jsonl
 ```
 
-The pre-trained 7-VM universal model in `models/vm-universal/` is found automatically — no path configuration needed.
+## 最终效果
 
-## Project Structure
+| 指标 | 值 |
+|------|-----|
+| 良性 FPR | 0.3% |
+| 攻击 TPR | 92.8% |
+| exfil/lateral | 100% |
+| recon | 99.8% |
+| persist | 87.7% |
+| privesc | 80.8% |
+| FFT C2 检测 | SNR=25.9 |
+| 自适应测试 | 7/7 |
+
+## 项目结构
 
 ```
-siming/
-├── detector/                 # Core detection code
-│   ├── train_prior.py        # TinyGPT training (0.88M params)
-│   ├── deploy_scorer.py      # Five-layer fusion scoring daemon
-│   ├── temporal_analyzer.py  # Second-order temporal CV analysis
-│   ├── adaptive_detector.py  # Adaptive behavior patterns
-│   ├── pattern_db.py         # Pattern matching engine
-│   ├── proto_head.py         # Prototype learning (contrastive)
-│   ├── auto_pattern.py       # Self-learning pattern extraction
-│   ├── parse_events.py       # Token discretization (8-token)
-│   ├── parse_raw_tracee.py   # Tracee JSONL → tokens
-│   ├── onboard_v2.py         # Auto-calibration (p95→p99 fallback)
-│   ├── deploy_siming.py      # One-click deployment CLI
-│   ├── collect_atomic.py     # Atomic Red Team collection
-│   ├── calibrate_vm_tau.py   # Cross-host τ calibration
-│   ├── patterns.jsonl        # Pattern library (99 entries)
-│   ├── prototypes.jsonl      # Prototype codebook (14 techniques × 3 prototypes, ~150 KB)
-│   └── ...                   # Tests, eval scripts, utilities
-├── models/
-│   └── vm-universal/         # Pre-trained 7-VM universal model
-│       ├── prior.pt          # 3.6 MB TinyGPT weights
-│       ├── slot_tau_local.json  # Calibrated thresholds (p99.5)
-│       └── slot_tau_vm.json     # VM baseline thresholds
-├── data/
-│   ├── experiment_results.json    # Evaluation results
-│   └── experiment_data_summary.md # Full experiment data summary
-└── docs/
-    ├── paper_behavioral_grammar_detection.md  # Full paper
-    └── fig*.png/pdf           # Paper figures (8 figures)
+siming-full/
+├── docs/                     # 文档
+│   ├── 司命-系统文档-v4.md     # 完整系统文档
+│   ├── 司命-全层升级报告.md     # 升级对比
+│   ├── 司命-反自适应升级报告.md  # 早期报告
+│   ├── paper_*.md             # 论文
+│   ├── figures/               # 8 张论文图表
+│   └── 对抗与平衡_蓝队对话纪要.md
+├── detector/                 # 核心代码（42 个 .py）
+│   ├── fusion_pipeline.py     # 六网融合管道
+│   ├── stat_layer_upgrade.py  # 统计层（PREV+EWMA）
+│   ├── semantic_layer_upgrade.py # 语义层（窗口分类+focal）
+│   ├── temporal_fft.py        # 时序层（FFT+多尺度）
+│   ├── adaptive_detector.py   # 自适应层（变体容忍）
+│   ├── train_semantic.py      # 对比学习+分类头训练
+│   ├── auto_labeler.py        # 自动弱标注器
+│   ├── collect_auditd.py      # auditd 采集器
+│   ├── deploy_siming.py       # 一键部署 CLI
+│   ├── patterns.jsonl         # 模式库（99 条）
+│   └── ...                    # 其他工具脚本
+├── models/                   # 预训练模型
+│   ├── model-stat-v3/         # 统计层（333词表, 3.6MB）
+│   ├── model-semantic-v5/     # 语义层（3.5MB）
+│   └── model-semantic-embed/  # 语义嵌入（532KB）
+├── data/                     # 数据
+│   ├── audit_all.jsonl        # 真实 auditd 事件（7598条）
+│   ├── synth_attacks_v4.jsonl # 合成攻击（4387条）
+│   ├── classifier_train_v5.jsonl # 分类头训练集
+│   └── ...
+└── README.md
 ```
 
-## Training Your Own Model
+## 技术栈
 
-```bash
-# Collect benign telemetry from your hosts
-# Format: {"tokens": ["ET:EXEC","PROC:bash",...8 tokens...]} per line
-
-# Train TinyGPT (~3 min on H800 GPU, ~11 min on CPU)
-python3 detector/train_prior.py data/your_benign.jsonl models/your-model
-
-# Calibrate thresholds
-python3 detector/onboard_v2.py models/your-model data/your_benign.jsonl
-
-# Evaluate
-python3 detector/test_e2e_v3.py
-```
-
-## Self-Learning Pipeline
-
-```bash
-# Automatically discover attack patterns from labeled sequences
-python3 detector/auto_pattern.py models/vm-universal --from-patterns
-
-# Output: data/auto_patterns_candidates.jsonl (pending human review)
-# Review → approve → append to detector/patterns.jsonl → retrain prototypes
-```
-
-## Atomic Red Team Collection
-
-> ⚠️ **Run only in isolated, dedicated test environments.** These scripts
-> execute real attack *test* commands from the public Atomic Red Team library
-> (with cleanup) to collect labeled telemetry. Never run them on production
-> or shared machines.
-
-```bash
-# Install Atomic Red Team framework
-sudo python3 detector/collect_atomic.py                      # Full collection (~600 techniques)
-sudo python3 detector/collect_atomic.py --technique T1053.003  # Single technique
-python3 detector/collect_atomic.py --list-only               # List available tests
-```
-
-## Reproducing the Paper Experiments
-
-All experiment data is documented in [`data/experiment_data_summary.md`](data/experiment_data_summary.md):
-
-```bash
-# Ablation + τ sweep + synthetic + cross-host
-python3 detector/supplementary_experiments.py
-
-# End-to-end pipeline test (11 ATT&CK attack/cleanup/verify triples)
-python3 detector/test_e2e_v3.py
-```
-
-## Citation
-
-```bibtex
-@misc{siming2026,
-    title={Behavioral Grammar: Detecting Adaptive Malware via Tiny Language Model Priors and Second-Order Temporal Analysis},
-    author={Zihan Luo},
-    year={2026},
-    note={arXiv preprint, cs.CR}
-}
-```
+- TinyGPT（4 层 Transformer, 0.90M 参数, 128 维）
+- 对比学习（InfoNCE）+ 分类头（6 类行为意图）
+- FFT 周期检测 + CV 变异系数
+- auditd execve 实时采集
+- Python 3.12 / PyTorch 2.5
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
-
-## Threat Model
-
-This system is designed to detect **adaptive adversarial agents** — malware that learns survival strategies from defensive feedback. The threat model is described at the abstraction level only. Specific offensive implementation details are not included in this release.
-
-## Acknowledgments
-
-- MITRE ATT&CK framework for technique taxonomy
-- Aqua Security Tracee for eBPF-based telemetry
-- CNCF Falco for runtime security rules
-- Atomic Red Team for standardized attack simulations
+Apache 2.0 — Zhiyan Security Lab

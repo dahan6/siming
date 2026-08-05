@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""deploy_scorer v3 端到端验证：在adaptive agent遥测 vs 良性数据上跑完整五网管道
+"""deploy_scorer v3 端到端验证：在隐翅虫遥测 vs 良性数据上跑完整五网管道
 
 验证目标：
-1. adaptive agent活跃期：告警覆盖率（各 P 层的命中分布）
+1. 隐翅虫活跃期：告警覆盖率（各 P 层的命中分布）
 2. 良性夜间：误报率（FPR）
 3. 各模块贡献：时序 vs 自适应 vs 模式 vs 上下文 vs 稀有度
 """
@@ -228,14 +228,14 @@ def main():
     if not os.path.exists(os.path.join(model_dir, "prior.pt")):
         model_dir = os.path.join(DET, "model-current")
     clone_path = os.path.expanduser(
-        "~/data/telemetry/clone_events.jsonl")
+        "~/adaptive-agent-sim/checkpoints/clone_events.jsonl")
     regime_path = os.path.expanduser(
-        "~/data/telemetry/regime_events.jsonl")
+        "~/adaptive-agent-sim/checkpoints/regime_events.jsonl")
 
-    # 测试 1: adaptive agent活跃期（13:00-14:00）
-    agent_result = run_pipeline(
+    # 测试 1: 隐翅虫活跃期（13:00-14:00）
+    bee_result = run_pipeline(
         model_dir, regime_path, hour_filter={"13"}, n_max=50000,
-        label="adaptive agent活跃期 (regime 13:00) [VM通用模型]", use_vm_tau=True)
+        label="隐翅虫活跃期 (regime 13:00) [VM通用模型]", use_vm_tau=True)
 
     # 测试 2: 良性夜间（02:00-05:00）
     benign_result = run_pipeline(
@@ -246,29 +246,29 @@ def main():
     print(f"\n{'='*60}")
     print(f"=== 汇总对比 ===")
     print(f"{'='*60}")
-    print(f"{'指标':<25}{'adaptive agent':>12}{'良性':>12}")
+    print(f"{'指标':<25}{'隐翅虫':>12}{'良性':>12}")
     print(f"{'-'*49}")
-    print(f"{'事件数':<25}{agent_result['n_scored']:>12}{benign_result['n_scored']:>12}")
-    print(f"{'总告警率':<25}{agent_result['fpr']:>11.2f}%{benign_result['fpr']:>11.2f}%")
+    print(f"{'事件数':<25}{bee_result['n_scored']:>12}{benign_result['n_scored']:>12}")
+    print(f"{'总告警率':<25}{bee_result['fpr']:>11.2f}%{benign_result['fpr']:>11.2f}%")
 
-    agent_p0 = agent_result["n_alert"].get("P0", 0)
-    agent_p1 = agent_result["n_alert"].get("P1", 0)
-    agent_p4 = agent_result["n_alert"].get("P4", 0)
-    agent_p5 = agent_result["n_alert"].get("P5", 0)
+    bee_p0 = bee_result["n_alert"].get("P0", 0)
+    bee_p1 = bee_result["n_alert"].get("P1", 0)
+    bee_p4 = bee_result["n_alert"].get("P4", 0)
+    bee_p5 = bee_result["n_alert"].get("P5", 0)
     benign_p0 = benign_result["n_alert"].get("P0", 0)
     benign_p4 = benign_result["n_alert"].get("P4", 0)
     benign_p5 = benign_result["n_alert"].get("P5", 0)
 
-    print(f"{'P0 自适应高危':<25}{agent_p0:>12}{benign_p0:>12}")
-    print(f"{'P1 模式命中':<25}{agent_p1:>12}{benign_result['n_alert'].get('P1', 0):>12}")
-    print(f"{'P4 时序异常':<25}{agent_p4:>12}{benign_p4:>12}")
-    print(f"{'P5 自适应低危':<25}{agent_p5:>12}{benign_p5:>12}")
+    print(f"{'P0 自适应高危':<25}{bee_p0:>12}{benign_p0:>12}")
+    print(f"{'P1 模式命中':<25}{bee_p1:>12}{benign_result['n_alert'].get('P1', 0):>12}")
+    print(f"{'P4 时序异常':<25}{bee_p4:>12}{benign_p4:>12}")
+    print(f"{'P5 自适应低危':<25}{bee_p5:>12}{benign_p5:>12}")
 
     # 新增模块（P0+P4+P5）的增益
-    new_agent = agent_p0 + agent_p4 + agent_p5
+    new_bee = bee_p0 + bee_p4 + bee_p5
     new_benign = benign_p0 + benign_p4 + benign_p5
     print(f"\n新模块增益 (P0+P4+P5):")
-    print(f"  adaptive agent: {new_agent} 条 ({new_agent/max(agent_result['n_scored'],1)*100:.1f}%)")
+    print(f"  隐翅虫: {new_bee} 条 ({new_bee/max(bee_result['n_scored'],1)*100:.1f}%)")
     print(f"  良性: {new_benign} 条 ({new_benign/max(benign_result['n_scored'],1)*100:.1f}%)")
 
 

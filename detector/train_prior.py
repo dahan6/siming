@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Siming M2: 序列先验训练
+"""LADO 靶场检测器 M2: 序列先验训练
 小型因果 Transformer 学习正常行为 token 流的条件分布 p(x_t | x_<t)。
 异常分 = 交叉熵（惊讶度）。设计见 docs/检测模型架构设计.md 第 2-3 节。
 
@@ -76,7 +76,7 @@ def batches(data, starts, batch_size=BATCH):
 def main():
     path = sys.argv[1]
     out_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.expanduser(
-        "~/siming/models")
+        "~/lado-range/detector/model")
     os.makedirs(out_dir, exist_ok=True)
 
     seqs = load_stream(path)

@@ -264,7 +264,7 @@ $$
 
 **Calibration.** Thresholds are set at:
 - $\text{cv}_{\text{low}} = 1.5$ (anomalous; benign p5 = 1.509)
-- $\text{cv}_{\text{suspicious}} = 1.6$ (benign p10 = 1.612)
+- $\text{cv}_{\text{suspicious}} = 1.6$ (benign p15 = 1.612)
 - $\text{tail}_{\text{low}} = 3.3$ (benign p5 of tail CV = 3.289)
 
 **Detection performance.** 15/15 AAA processes fall below the CV = 1.5 threshold; 1/15 benign processes trigger a false positive (a `sh` process with CV = 1.268, attributable to scripted administrative activity). This yields a detection rate of 100% and an FPR of 6.7% on the temporal dimension alone.
@@ -280,7 +280,7 @@ Beyond distributional statistics, we employ rule-based pattern matching for spec
 | SLEEP_STEPPING | Alternating sleep-action cadence | 3 |
 | RECON_UNIFORM | Uniformly distributed reconnaissance commands | 3 |
 | DISGUISE_C2 | Disguised process performing C2 outbound | 5 |
-| MORPH_TRANSFORM | Retirement-and-morphological transformation sequence | 5 |
+| REBIRTH_RETIRE | Retirement-and-rebirth sequence | 5 |
 | SUID_PRIVESC | SUID binary privilege escalation | 5 |
 
 These detectors operate as sliding-window pattern matchers with no ML dependency, providing a computationally cheap complement to the neural and statistical layers. Their value lies in detecting *specific* adaptive strategies that may not sufficiently perturb the distributional prior but are recognizable as structured behavioral patterns.
@@ -454,7 +454,7 @@ The 30× separation in sleep CV is the most striking single-metric result in thi
 > | **P4 (temporal)** | **67.4%** | **11.4%** |
 > | P5 (adaptive-low) | 2.7% | 18.2% |
 
-*P0 hits depend on occurrence of specific high-severity events (morphological transformation, SUID privesc) which did not occur in this measurement window.
+*P0 hits depend on occurrence of specific high-severity events (rebirth, SUID privesc) which did not occur in this measurement window.
 
 **Interpretation.** P4 (temporal) is the single strongest discriminator, with a signal ratio (AAA / benign) of 5.9×. P2 and P3 show inverted ratios (benign > AAA) due to the priority de-duplication effect: when P4 fires, lower-priority signals are suppressed. The raw P2/P3 anomaly rates on AAA events are higher than the fused rates suggest.
 
@@ -478,7 +478,7 @@ We conduct a systematic ablation by selectively disabling each detection layer a
 
 1. **Temporal analysis is the single most critical layer.** Removing P4 drops detection from 93.0% to 73.9% (−19.1 pp), confirming that the stepping cadence CV signal is the primary discriminator against adaptive threats.
 
-2. **Adaptive detection (P0/P5) contributes zero in this measurement window** because no morphological transformation/SUID events occurred during the sampling period. Its value is event-dependent — it activates only on specific high-severity patterns. In the synthetic test suite (Section 6.8), all 7 adaptive patterns are correctly detected.
+2. **Adaptive detection (P0/P5) contributes zero in this measurement window** because no rebirth/SUID events occurred during the sampling period. Its value is event-dependent — it activates only on specific high-severity patterns. In the synthetic test suite (Section 6.8), all 7 adaptive patterns are correctly detected.
 
 3. **Pattern matching (P1) provides marginal detection lift** (+2.9 pp) but significant FPR reduction when isolated — removing it drops benign FPR from 24.7% to 11.7%, because weak patterns (severity < 4) generate noise. This motivates the strict/weak pattern separation in the fusion architecture.
 
@@ -511,16 +511,16 @@ We validate the multi-VM universal model on each of the 7 VMs independently, tre
 >
 > | Test VM | Events | FPR |
 > |---|---|---|
-> | VM-1 | 5,000 | 1.2% |
-> | VM-2 | 5,000 | 1.0% |
-> | VM-3 | 3,731 | 2.4% |
-> | VM-4 | 3,733 | 4.7% |
-> | VM-5 | 2,463 | 3.6% |
-> | VM-6 | 2,688 | 6.1% |
-> | VM-7 | 2,450 | 4.7% |
+> | range-l2-t1 | 5,000 | 1.2% |
+> | range-l2-t2 | 5,000 | 1.0% |
+> | range-l2-t3 | 3,731 | 2.4% |
+> | range-l2-t4 | 3,733 | 4.7% |
+> | range-l2-t5 | 2,463 | 3.6% |
+> | range-l2-t6 | 2,688 | 6.1% |
+> | range-l2-t7 | 2,450 | 4.7% |
 > | **Average** | — | **3.4%** |
 
-Six of seven VMs achieve FPR below 5%; only VM-6 slightly exceeds the target (6.1%). The average FPR of 3.4% demonstrates that the multi-VM joint training approach effectively addresses the cross-host generalization problem that plagued single-host models (92% FPR in our v1 baseline).
+Six of seven VMs achieve FPR below 5%; only VM t6 slightly exceeds the target (6.1%). The average FPR of 3.4% demonstrates that the multi-VM joint training approach effectively addresses the cross-host generalization problem that plagued single-host models (92% FPR in our v1 baseline).
 
 ### 6.7 Model Characteristics
 

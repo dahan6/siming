@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """二阶时序分析器：检测机器节奏 vs 人节奏的结构差异
 
-一阶 DT 桶被adaptive agent的频率跟随+抖动骗过，但统计高阶矩仍有结构差异：
+一阶 DT 桶被隐翅虫的频率跟随+抖动骗过，但统计高阶矩仍有结构差异：
 - 人驱动：间隔重尾（突发+长静默），cv>1.5，tail_ratio>5
 - 机器驱动：间隔均匀/正态，cv<0.8，tail_ratio<3
 - 频率跟随：进程间隔与系统事件率高耦合，eps_corr>0.6
@@ -27,8 +27,8 @@ class TemporalAnalyzer:
         self.proc_times = defaultdict(list)
         # 全局事件率（滑窗估计）
         self.global_times = []
-        # 阈值（2026-07-31 用adaptive agent遥测 18 万条标定）
-        # 良性基线 CV p5=1.509, adaptive agent CV p5=0.647
+        # 阈值（2026-07-31 用隐翅虫遥测 18 万条标定）
+        # 良性基线 CV p5=1.509, 隐翅虫 CV p5=0.647
         # 检测率 15/15, 误报 1/15 (sh)
         self.thresholds = {
             "cv_low": 1.5,      # <此值=机器节奏（良性 p5=1.509）

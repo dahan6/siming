@@ -3,7 +3,7 @@
 尾随 host_tracee.jsonl，对新增事件打分告警；每轮从上次偏移量续读。
 
 判定逻辑（优先级从高到低，同一事件只出一条告警）：
-  P0 自适应行为 —— adaptive_detector 高危（morphological transformation/伪装C2/SUID提权）
+  P0 自适应行为 —— adaptive_detector 高危（rebirth/伪装C2/SUID提权）
   P1 模式命中   —— patterns.jsonl 字段级匹配（已知坏，带 ATT&CK 技术号）
   P2 上下文异常 —— PARENT/DST/DT 槽位超分维度 τ（组合不对）
   P3 稀有度异常 —— PROC/ARGV 槽位超 τ 或 UNK（没见过）
@@ -49,9 +49,9 @@ def main():
     def opt(name, default):
         return args[args.index(name) + 1] if name in args else default
 
-    src = opt("--src", os.path.expanduser("~/siming/telemetry/tracee.jsonl"))
+    src = opt("--src", os.path.expanduser("~/defense-lab/data/host_tracee.jsonl"))
     state_path = opt("--state", os.path.join(model_dir, "scorer_state.json"))
-    alerts_path = opt("--alerts", os.path.expanduser("~/siming/data/alerts.jsonl"))
+    alerts_path = opt("--alerts", os.path.expanduser("~/defense-lab/data/alerts.jsonl"))
     patterns_path = opt("--patterns", os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                    "patterns.jsonl"))
 
