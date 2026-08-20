@@ -1,79 +1,79 @@
-# 司命（Siming）— 行为语法检测引擎 v4
+# Siming — Behavioral Grammar Detection Engine v4
 
-**六网融合管道**：统计 + 语义 + 时序 + 自适应四层独立检测，交叉确认降误报。
+**Six-network fusion pipeline**: four independent detection layers (statistical + semantic + temporal + adaptive) with cross-validation to minimize false positives.
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 安装
+# Install dependencies
 pip install torch numpy scikit-learn
 sudo apt install auditd
 
-# 启用 auditd execve 监控
+# Enable auditd execve monitoring
 sudo auditctl -a always,exit -F arch=b64 -S execve -k exec_log
 sudo auditctl -a always,exit -F arch=b32 -S execve -k exec_log
 
-# 运行六网融合管道
+# Run the six-network fusion pipeline
 python detector/fusion_pipeline.py --eval data/audit_all.jsonl
 
-# 新机器标定
+# Calibrate on a new machine
 python detector/onboard_v2.py models/model-stat-v3 data/onboard_benign.jsonl
 ```
 
-## 最终效果
+## Performance
 
-| 指标 | 值 |
-|------|-----|
-| 良性 FPR | 0.3% |
-| 攻击 TPR | 92.8% |
-| exfil/lateral | 100% |
-| recon | 99.8% |
-| persist | 87.7% |
-| privesc | 80.8% |
-| FFT C2 检测 | SNR=25.9 |
-| 自适应测试 | 7/7 |
+| Metric | Value |
+|--------|-------|
+| Benign FPR | 0.3% |
+| Attack TPR | 92.8% |
+| Exfiltration / Lateral Movement | 100% |
+| Reconnaissance | 99.8% |
+| Persistence | 87.7% |
+| Privilege Escalation | 80.8% |
+| FFT C2 Detection | SNR = 25.9 |
+| Adaptive Adversarial Tests | 7/7 |
 
-## 项目结构
+## Project Structure
 
 ```
 siming-full/
-├── docs/                     # 文档
-│   ├── 司命-系统文档-v4.md     # 完整系统文档
-│   ├── 司命-全层升级报告.md     # 升级对比
-│   ├── 司命-反自适应升级报告.md  # 早期报告
-│   ├── paper_*.md             # 论文
-│   ├── figures/               # 8 张论文图表
-│   └── 对抗与平衡_蓝队对话纪要.md
-├── detector/                 # 核心代码（42 个 .py）
-│   ├── fusion_pipeline.py     # 六网融合管道
-│   ├── stat_layer_upgrade.py  # 统计层（PREV+EWMA）
-│   ├── semantic_layer_upgrade.py # 语义层（窗口分类+focal）
-│   ├── temporal_fft.py        # 时序层（FFT+多尺度）
-│   ├── adaptive_detector.py   # 自适应层（变体容忍）
-│   ├── train_semantic.py      # 对比学习+分类头训练
-│   ├── auto_labeler.py        # 自动弱标注器
-│   ├── collect_auditd.py      # auditd 采集器
-│   ├── deploy_siming.py       # 一键部署 CLI
-│   ├── patterns.jsonl         # 模式库（99 条）
-│   └── ...                    # 其他工具脚本
-├── models/                   # 预训练模型
-│   ├── model-stat-v3/         # 统计层（333词表, 3.6MB）
-│   ├── model-semantic-v5/     # 语义层（3.5MB）
-│   └── model-semantic-embed/  # 语义嵌入（532KB）
-├── data/                     # 数据
-│   ├── audit_all.jsonl        # 真实 auditd 事件（7598条）
-│   ├── synth_attacks_v4.jsonl # 合成攻击（4387条）
-│   ├── classifier_train_v5.jsonl # 分类头训练集
+├── docs/                          # Documentation
+│   ├── siming-system-doc-v4.md    # Complete system documentation
+│   ├── full-layer-upgrade-report.md    # Upgrade comparison
+│   ├── anti-adaptive-upgrade-report.md # Early anti-adaptive report
+│   ├── paper_*.md                 # Research paper
+│   ├── figures/                   # 8 paper figures
+│   └── blue-team-dialogue-notes.md
+├── detector/                      # Core engine (42 Python scripts)
+│   ├── fusion_pipeline.py         # Six-network fusion pipeline
+│   ├── stat_layer_upgrade.py      # Statistical layer (PREV + EWMA)
+│   ├── semantic_layer_upgrade.py  # Semantic layer (window classifier + focal loss)
+│   ├── temporal_fft.py            # Temporal layer (FFT + multi-scale)
+│   ├── adaptive_detector.py       # Adaptive layer (variant-tolerant)
+│   ├── train_semantic.py          # Contrastive learning + classifier head training
+│   ├── auto_labeler.py            # Automatic weak labeler
+│   ├── collect_auditd.py          # auditd event collector
+│   ├── deploy_siming.py           # One-click deployment CLI
+│   ├── patterns.jsonl             # Pattern library (99 entries)
+│   └── ...                        # Additional utility scripts
+├── models/                        # Pretrained models
+│   ├── model-stat-v3/             # Statistical layer (333-token vocab, 3.6MB)
+│   ├── model-semantic-v5/         # Semantic layer (3.5MB)
+│   └── model-semantic-embed/      # Semantic embeddings (532KB)
+├── data/                          # Datasets
+│   ├── audit_all.jsonl            # Real auditd events (7,598 records)
+│   ├── synth_attacks_v4.jsonl     # Synthetic attacks (4,387 records)
+│   ├── classifier_train_v5.jsonl  # Classifier training set
 │   └── ...
 └── README.md
 ```
 
-## 技术栈
+## Tech Stack
 
-- TinyGPT（4 层 Transformer, 0.90M 参数, 128 维）
-- 对比学习（InfoNCE）+ 分类头（6 类行为意图）
-- FFT 周期检测 + CV 变异系数
-- auditd execve 实时采集
+- TinyGPT (4-layer Transformer, 0.90M parameters, 128-dim)
+- Contrastive learning (InfoNCE) + classifier head (6 behavioral intent classes)
+- FFT periodicity detection + coefficient of variation (CV) analysis
+- Real-time auditd execve event collection
 - Python 3.12 / PyTorch 2.5
 
 ## License
