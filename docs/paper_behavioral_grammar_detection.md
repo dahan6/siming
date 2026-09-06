@@ -32,6 +32,8 @@ We instantiate this thesis in the *Behavioral Grammar* detection engine (codenam
 
 - **C5 — Closed-loop adversarial validation against an adaptive agent.** Through three rounds of iterative red-team engagement, we demonstrate that predicted evasion vectors (parent-process chain analysis) were empirically invalidated, while unanticipated structural vulnerabilities (temporal cadence, persistence technique collision) emerged as the true detection surfaces.
 
+**Code and data availability.** The complete detection engine, trained model weights (0.88M parameters), experiment data, and figure sources are publicly available at https://github.com/dahan6/siming.
+
 The remainder of this paper is organized as follows. Section 2 surveys related work. Section 3 formalizes the adaptive adversarial threat model. Section 4 details the detection architecture. Section 5 reports the closed-loop adversarial experiments. Section 6 presents the full evaluation. Section 7 provides an extended discussion situating our findings within coevolutionary game theory and the evolvability-versus-behavior framework. Section 8 concludes.
 
 ---
