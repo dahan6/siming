@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Behavior Grammar Range"
+authors:
+  # TODO: 补充正式作者信息（family-names / given-names / orcid）
+  - family-names: "TODO"
+    given-names: "TODO"
+year: 2026
+license: Apache-2.0

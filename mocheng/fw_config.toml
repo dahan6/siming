@@ -1,0 +1,85 @@
+# 墨城防火墙配置文件
+# 所有路径相对于项目根目录 ~/mocheng-firewall/
+
+[daemon]
+# 网络流日志源（conntrack 采集器输出）
+src = "data/live_flows.jsonl"
+# 告警输出
+alerts = "data/alerts.jsonl"
+# 状态文件（断点续读）
+state = "model/daemon_state.json"
+# 单次扫描后退出（false = 持续监控）
+once = false
+# 执法模式: dry-run / enforce / observe
+enforce_mode = "dry-run"
+
+[model]
+# 模型目录
+dir = "model"
+# 全局异常阈值分位数（p995 = 99.5%）
+tau_quantile = "p995"
+# EWMA 平滑系数
+alpha = 0.3
+
+[slots]
+# 上下文维度（组合异常 = 强信号）
+context = ["DSTNET", "DT", "PORTCLS"]
+# 稀有度维度（没见过 = 弱信号）
+rarity = ["PROTO", "SRCNET", "SIZECLS", "DIR"]
+
+[enforce]
+# P0 原型命中 → 直接阻断
+p0_action = "DROP"
+p0_ttl = 3600
+# NDR 信标检测最小置信分数
+ndr_score_min = 0.5
+# P1 模式命中 → 按模式 action（需模型佐证）
+p1_require_model = true
+p1_ttl = 3600
+# P2 上下文异常 → 连续 N 次后阻断
+p2_threshold = 3
+p2_ttl = 1800
+# P3 稀有度 → 仅告警
+p3_action = "ALERT"
+
+[alert]
+# 告警外发方式: file / syslog / webhook / all
+method = "file"
+# syslog 配置
+syslog_facility = "local0"
+syslog_tag = "mocheng"
+# webhook 配置（POST JSON）
+webhook_url = ""
+webhook_timeout = 5
+# 告警聚合窗口（秒）
+agg_window_sec = 60
+# NDR 信标聚合窗口（秒）——信标周期长，需更长去重窗口
+ndr_agg_window_sec = 600
+
+[collect]
+# 采集间隔（秒）
+interval = 2.0
+# 最大采集条数
+max_flows = 50000
+# 数据源: conntrack / proc / pcap
+source = "conntrack"
+
+[drift]
+# 检测窗口大小
+window = 20000
+# 检查间隔（秒）
+interval = 300
+# 词表增长阈值（比例）
+vocab_growth = 0.15
+# 槽位分布漂移阈值
+slot_drift = 0.05
+# 速率变化阈值（倍）
+rate_change = 2.0
+
+[proto]
+# 每技术原型数
+k = 5
+# 对比训练轮数
+epochs = 200
+# margin
+margin = 0.5

@@ -1,0 +1,21 @@
+{
+  "model": "model-host-r3-clean",
+  "tau": 2.61793851852417,
+  "vocab": 240,
+  "rove": {
+    "n": 40000,
+    "all_detect": 1.0,
+    "invocab_share": 0.575675,
+    "invocab_detect": 1.0,
+    "invocab_detect_ewma": 1.0,
+    "score_p50": 19.792428970336914
+  },
+  "bee_active": {
+    "n": 36953,
+    "all_detect": 1.0,
+    "invocab_share": 0.809271236435472,
+    "invocab_detect": 1.0,
+    "invocab_detect_ewma": 1.0,
+    "score_p50": 21.82250213623047
+  }
+}

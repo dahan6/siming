@@ -1,0 +1,114 @@
+{
+ "rule1_sudo_password": {
+  "count": 2,
+  "files": [
+   "data\\e1_range\\cap.jsonl",
+   "docs\\technical\\司命-会话交接.md"
+  ]
+ },
+ "rule2a_lab_ip_10net": {
+  "count": 22,
+  "files": [
+   "detector/parse_events.py",
+   "detector\\inject_anomaly.sh",
+   "mocheng/synth_traffic.py",
+   "mocheng\\tests\\test_fw.py",
+   "range/behavior-grammar-range/README.md",
+   "range/behavior-grammar-range/SANITIZE_LOG.md",
+   "range/behavior-grammar-range/detector/inject_anomaly.sh",
+   "range/behavior-grammar-range/detector/parse_events.py",
+   "range/behavior-grammar-range/range/scripts/lockdown.sh",
+   "range/behavior-grammar-range/range/xml/lado-isolated-net.xml",
+   "range/behavior-grammar-range/range/xml/user-data.template"
+  ],
+  "note": "含 2 处手工修正：parse_events.py 的 LAN 判定前缀改为 192.0.2.；synth_traffic.py VPN_IPS 模板改为 192.0.2.x；range/ 骨架版 parse_events.py 同类修正 1 处"
+ },
+ "rule2b_lab_ip_192net": {
+  "count": 680,
+  "files": [
+   "data\\e1_range\\cap.jsonl",
+   "data\\e3_raw\\e3-desktop-1_cap.jsonl",
+   "data\\e3_raw\\e3-desktop-2_cap.jsonl",
+   "data\\e3_raw\\e3-dev-1_cap.jsonl",
+   "data\\e3_raw\\e3-dev-2_cap.jsonl",
+   "data\\e3_raw\\e3-dev-3_cap.jsonl",
+   "data\\e3_raw\\e3-web-1_cap.jsonl",
+   "data\\e3_raw\\e3-web-2_cap.jsonl",
+   "detector\\onboard.sh",
+   "detector\\vm_activator.sh",
+   "docs\\technical\\司命-会话交接.md",
+   "mocheng/synth_traffic.py",
+   "mocheng\\README.md",
+   "mocheng\\fw_state.py",
+   "mocheng\\fw_whitelist.py",
+   "mocheng\\onboard_fw.sh",
+   "mocheng\\synth_traffic.py",
+   "mocheng\\tests\\test_fw.py"
+  ],
+  "note": "含 1 处手工修正：synth_traffic.py LAN_IPS 模板改为 198.51.100.x；detector/optc_to_tokens.py、detector/collect_host_procfs.py、docs/papers 补丁脚本中的 startswith('192.168.') 为 RFC1918 私网判定逻辑（非真实地址），按语义保留"
+ },
+ "rule3a_lab_user_home": {
+  "count": 40,
+  "files": [
+   "detector\\workload_simulator.py",
+   "docs\\reports\\night_iterations.md",
+   "mocheng\\fw_paths.py",
+   "mocheng\\setup.sh"
+  ]
+ },
+ "rule3b_lab_user": {
+  "count": 2260,
+  "files": [
+   "data\\attack_traces\\audit_events.jsonl",
+   "data\\attack_traces\\cron_16.jsonl",
+   "data\\attack_traces\\host_attack_test.jsonl",
+   "data\\attack_traces\\host_real_120s.jsonl",
+   "data\\attack_traces\\host_real_attack.jsonl",
+   "data\\attack_traces\\host_real_augmented.jsonl",
+   "data\\attack_traces\\host_real_benign.jsonl",
+   "data\\attack_traces\\host_real_extended.jsonl",
+   "data\\attack_traces\\test_attack.jsonl",
+   "data\\attack_traces\\test_host.jsonl",
+   "data\\attack_traces\\workload_sim_5min.jsonl"
+  ]
+ },
+ "rule2c_cloud_instance": {
+  "count": 0,
+  "files": []
+ },
+ "rule5a_old_email": {
+  "count": 0,
+  "files": []
+ },
+ "rule5b_old_qq": {
+  "count": 0,
+  "files": []
+ },
+ "vm_password_defense": {
+  "count": 40,
+  "files": [
+   "data/e1_range/cap.jsonl",
+   "data/e3_raw/e3-desktop-1_cap.jsonl",
+   "data/e3_raw/e3-desktop-2_cap.jsonl",
+   "data/e3_raw/e3-dev-1_cap.jsonl",
+   "data/e3_raw/e3-dev-2_cap.jsonl",
+   "data/e3_raw/e3-dev-3_cap.jsonl",
+   "data/e3_raw/e3-web-1_cap.jsonl",
+   "data/e3_raw/e3-web-2_cap.jsonl",
+   "detector/onboard.sh",
+   "detector/vm_activator.sh",
+   "docs/technical/司命-会话交接.md",
+   "mocheng/onboard_fw.sh",
+   "range/scripts/collect.sh",
+   "range/scripts/remediate_round.sh"
+  ],
+  "note": "规则外补充：靶场 VM 明文密码 'defense'（sshpass -p / echo|sudo -S / 默认值 / 文档）全部替换为 <vm-password>；vm_activator.sh 的 VM_PASS 默认值改为强制传参；range/ 补跑时再处理 4 处 sshpass 与 2 处 SSHPASS 变量"
+ },
+ "filename_renames": {
+  "count": 0,
+  "note": "tar 内 GBK/UTF-8 混合文件名已在解压阶段统一解码为 UTF-8 中文名，无需额外重命名；无残留乱码文件名"
+ },
+ "range_inclusion": {
+  "note": "06-靶场整体纳入为 range/（排除 .git 与 __pycache__）；嵌套骨架 range/behavior-grammar-range/ 为带独立 LICENSE 的自包含最小发布件，其 detector/ 与 docs/ 是主树内容的冻结子集（2 个脚本与对话纪要与主树逐字节相同），为保持骨架完整性予以保留；range/scripts/ 与骨架 range/scripts 文件名不重叠、互为补充"
+ }
+}

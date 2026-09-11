@@ -1,0 +1,204 @@
+{
+  "benign": {
+    "name": "benign_host",
+    "n_events": 100000,
+    "dt_probs": {
+      "DT0": 0.6739,
+      "DT1": 0.1719,
+      "DT2": 0.055,
+      "DT3": 0.0984,
+      "DT4": 0.0008,
+      "DT5": 0.0,
+      "DT6": 0.0
+    },
+    "dt_cv_estimate": 3.587,
+    "proc_vocab": 88,
+    "et_vocab": 2,
+    "argv_vocab": 12,
+    "proc_top10": [
+      [
+        "PROC:ssh",
+        95055
+      ],
+      [
+        "PROC:NetworkManager",
+        1606
+      ],
+      [
+        "PROC:systemd-resolve",
+        666
+      ],
+      [
+        "PROC:libuv-worker",
+        578
+      ],
+      [
+        "PROC:kimi",
+        572
+      ],
+      [
+        "PROC:scp",
+        552
+      ],
+      [
+        "PROC:bash",
+        87
+      ],
+      [
+        "PROC:virsh",
+        60
+      ],
+      [
+        "PROC:getent",
+        60
+      ],
+      [
+        "PROC:libvirt_leasesh",
+        49
+      ]
+    ],
+    "et_dist": {
+      "ET:EXEC": 16698,
+      "ET:CONN": 83302
+    }
+  },
+  "rove": {
+    "name": "AAA_rove",
+    "n_events": 70209,
+    "dt_probs": {
+      "DT0": 0.2378,
+      "DT1": 0.1225,
+      "DT2": 0.0024,
+      "DT3": 0.5604,
+      "DT4": 0.0635,
+      "DT5": 0.013,
+      "DT6": 0.0005
+    },
+    "dt_cv_estimate": 4.172,
+    "proc_vocab": 37,
+    "et_vocab": 1,
+    "argv_vocab": 7,
+    "proc_top10": [
+      [
+        "PROC:head",
+        17919
+      ],
+      [
+        "PROC:cat",
+        5956
+      ],
+      [
+        "PROC:systemctl",
+        5836
+      ],
+      [
+        "PROC:readlink",
+        5542
+      ],
+      [
+        "PROC:ps",
+        3298
+      ],
+      [
+        "PROC:ls",
+        3190
+      ],
+      [
+        "PROC:find",
+        3179
+      ],
+      [
+        "PROC:journalctl",
+        3044
+      ],
+      [
+        "PROC:uptime",
+        3009
+      ],
+      [
+        "PROC:ss",
+        2967
+      ]
+    ],
+    "et_dist": {
+      "ET:EXEC": 70209
+    }
+  },
+  "bee": {
+    "name": "AAA_bee_active",
+    "n_events": 36953,
+    "dt_probs": {
+      "DT0": 0.2659,
+      "DT1": 0.4248,
+      "DT2": 0.004,
+      "DT3": 0.269,
+      "DT4": 0.0363,
+      "DT5": 0.0,
+      "DT6": 0.0
+    },
+    "dt_cv_estimate": 2.936,
+    "proc_vocab": 81,
+    "et_vocab": 2,
+    "argv_vocab": 10,
+    "proc_top10": [
+      [
+        "PROC:sleep",
+        11292
+      ],
+      [
+        "PROC:head",
+        4588
+      ],
+      [
+        "PROC:ls",
+        3800
+      ],
+      [
+        "PROC:systemctl",
+        2926
+      ],
+      [
+        "PROC:ps",
+        2445
+      ],
+      [
+        "PROC:journalctl",
+        2301
+      ],
+      [
+        "PROC:cat",
+        1560
+      ],
+      [
+        "PROC:find",
+        859
+      ],
+      [
+        "PROC:ss",
+        780
+      ],
+      [
+        "PROC:uptime",
+        753
+      ]
+    ],
+    "et_dist": {
+      "ET:EXEC": 28487,
+      "ET:CONN": 8466
+    }
+  },
+  "kl_divergence": {
+    "ET_rove_vs_benign": 1.79,
+    "ET_bee_vs_benign": 0.883,
+    "PROC_rove_vs_benign": 7.338,
+    "PROC_bee_vs_benign": 7.109,
+    "ARGV_rove_vs_benign": 5.34,
+    "ARGV_bee_vs_benign": 3.886,
+    "DT_rove_vs_benign": 1.05,
+    "DT_bee_vs_benign": 0.535
+  },
+  "aaa_label_dist": {
+    "recon": 70109,
+    "privesc": 100
+  }
+}

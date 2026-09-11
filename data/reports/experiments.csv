@@ -1,0 +1,8 @@
+# 实验台账（机器可读，论文数据源）
+# 环境：宿主机真实遥测（tracee: sched_process_exec + security_socket_connect）
+# 模型：TinyGPT 因果 Transformer d_model=128 n_layer=4 n_head=4 ctx=128
+# 采集速率约 40-50 事件/s；GPU=AMD ROCm（与用户训练争用，nice 19）
+round,events,tokens,vocab,params_M,epochs,batch,train_s,val_loss,tau_p995,holdout_n,fpr_raw_pct,fpr_ewma_pct,anom_detected,margin_vs_p95,min_anom_score,verdict,notes
+r0,87276,,42,0.82,8,64,,0.0504,2.435,800,4.62,3.75,4/4,3.5,7.87,FAIL,彩排轮；观察者污染为主因（管线自身tee/date/python进程落在留出窗口）
+r1,267694,1873858,148,0.85,8,256,10892,0.0729,2.523,800,3.00,1.75,4/4,5.7,10.48,FAIL,数据量x3；误报转为真实稀有活动(libuv-worker/python3-spawn-ssh/mkdir)；tau=3.5时FPR=1.00%余量2.99x双判据各差0.01
+r2,436059,3052413,167,0.85,8,256,17449,0.0693,2.655,20000,2.76,1.00,4/4,8.8,13.52,PASS,800点快照曾误判FAIL(5.50%)根因=留出窗口无代表性;20000点复验通过;可行tau区间[3.0,4.5]推荐3.5

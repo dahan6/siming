@@ -1,0 +1,36 @@
+{
+  "arch": "tinygpt",
+  "seed": 0,
+  "mode": "full",
+  "n_params": 848535,
+  "vocab": 151,
+  "val_loss": 0.07438496872782707,
+  "val_ppl": 1.077221422244368,
+  "tau": 4.931216876506799,
+  "fpr_raw": 0.022166666666666668,
+  "fpr_ewma": 0.017166666666666667,
+  "unk_rate": 0.0005,
+  "attacks": {
+    "rove": {
+      "n": 20000,
+      "labels": [
+        "privesc",
+        "recon"
+      ],
+      "detect_raw": 1.0,
+      "detect_ewma": 1.0,
+      "score_p50": 16.298035621643066,
+      "score_p95": 17.43508634567261
+    },
+    "bee_active": {
+      "n": 20000,
+      "labels": [
+        "attack"
+      ],
+      "detect_raw": 1.0,
+      "detect_ewma": 1.0,
+      "score_p50": 16.97338104248047,
+      "score_p95": 18.11164093017578
+    }
+  }
+}

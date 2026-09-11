@@ -1,0 +1,2 @@
+{"ts": "2026-08-01T22:17:53.127453+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:suricata", "ARGV:N3P", "PARENT:systemd", "UID:0", "DST:NONE", "PC:OTHER", "DT0"]}
+{"ts": "2026-08-01T22:17:53.127453+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:kworker/17:0", "ARGV0", "PARENT:kthreadd", "UID:0", "DST:NONE", "PC:NONE", "DT0"]}

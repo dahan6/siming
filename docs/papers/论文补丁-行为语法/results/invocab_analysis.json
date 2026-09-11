@@ -1,0 +1,47 @@
+{
+  "lstm_keys": {
+    "tau": 5.485936737060555,
+    "rove": {
+      "n": 19999,
+      "all_detect": 0.5963798189909495,
+      "invocab_share": 0.47967398369918496,
+      "invocab_detect": 0.158553111643907
+    },
+    "bee_active": {
+      "n": 19999,
+      "all_detect": 0.6811340567028351,
+      "invocab_share": 0.7303865193259663,
+      "invocab_detect": 0.5634284931881974
+    }
+  },
+  "lstm_full": {
+    "tau": 5.136834857463805,
+    "rove": {
+      "n": 20000,
+      "all_detect": 0.9992,
+      "invocab_share": 0.3984,
+      "invocab_detect": 0.9979919678714859
+    },
+    "bee_active": {
+      "n": 20000,
+      "all_detect": 0.97345,
+      "invocab_share": 0.7134,
+      "invocab_detect": 0.9627838519764508
+    }
+  },
+  "tinygpt": {
+    "tau": 4.931216876506799,
+    "rove": {
+      "n": 20000,
+      "all_detect": 1.0,
+      "invocab_share": 0.3984,
+      "invocab_detect": 1.0
+    },
+    "bee_active": {
+      "n": 20000,
+      "all_detect": 1.0,
+      "invocab_share": 0.7134,
+      "invocab_detect": 1.0
+    }
+  }
+}

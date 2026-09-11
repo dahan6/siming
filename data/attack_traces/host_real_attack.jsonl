@@ -1,0 +1,6 @@
+{"ts": "2026-08-01T22:43:02.538400+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:crontab", "ARGV:N1-", "PARENT:python", "UID:1000", "DST:NONE", "PC:NONE", "DT0"], "label": "attack", "attack_cmd": "crontab -l"}
+{"ts": "2026-08-01T22:43:02.592074+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:ss", "ARGV:N1-", "PARENT:python", "UID:1000", "DST:NONE", "PC:NONE", "DT0"], "label": "attack", "attack_cmd": "ss -tlnp"}
+{"ts": "2026-08-01T22:43:02.646362+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:cat", "ARGV:N1P", "PARENT:python", "UID:1000", "DST:NONE", "PC:ETC_PASSWD", "DT0"], "label": "attack", "attack_cmd": "cat /etc/passwd"}
+{"ts": "2026-08-01T22:43:02.699907+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:find", "ARGV:N3P", "PARENT:python", "UID:1000", "DST:NONE", "PC:OTHER", "DT0"], "label": "attack", "attack_cmd": "find / -perm -4000 -type f"}
+{"ts": "2026-08-01T22:43:04.192327+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:suricata", "ARGV:N3P", "PARENT:systemd", "UID:0", "DST:NONE", "PC:OTHER", "DT0"], "label": "attack", "attack_cmd": "find / -perm -4000 -type f"}
+{"ts": "2026-08-01T22:43:04.461800+08:00", "host": "lab-FAEX1", "tokens": ["ET:EXEC", "PROC:ps", "ARGV0", "PARENT:python", "UID:1000", "DST:NONE", "PC:NONE", "DT0"], "label": "attack", "attack_cmd": "ps aux"}

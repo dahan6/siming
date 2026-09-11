@@ -1,0 +1,25 @@
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# Archives / local scratch
+*.tar.gz
+*.zip
+*.log
+staging-*/
+
+# Runtime state (not part of the release)
+alerts.jsonl
+scorer_state.json
+checkpoints/

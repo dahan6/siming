@@ -1,0 +1,47 @@
+{
+  "val_ppl": 1.1745736818459984,
+  "tau": 6.333898978233327,
+  "benign_holdout_fpr": 0.0,
+  "sc1_SysClient0201": {
+    "n_attack": 31826,
+    "n_detect": 26199,
+    "detect_rate": 0.8231948721171369,
+    "n_benign_sample": 33730,
+    "fpr": 0.2327305069670916
+  },
+  "sc1_SysClient0402": {
+    "n_attack": 35575,
+    "n_detect": 28999,
+    "detect_rate": 0.8151510892480675,
+    "n_benign_sample": 34690,
+    "fpr": 0.2438743153646584
+  },
+  "sc2_SysClient0501": {
+    "n_attack": 24355,
+    "n_detect": 15860,
+    "detect_rate": 0.6512009854239376,
+    "n_benign_sample": 33977,
+    "fpr": 0.08382140859993525
+  },
+  "sc2_SysClient0005": {
+    "n_attack": 2696,
+    "n_detect": 2346,
+    "detect_rate": 0.8701780415430267,
+    "n_benign_sample": 34363,
+    "fpr": 0.06824200448156448
+  },
+  "sc3_SysClient0051": {
+    "n_attack": 26526,
+    "n_detect": 11131,
+    "detect_rate": 0.41962602729397575,
+    "n_benign_sample": 20100,
+    "fpr": 0.05333333333333334
+  },
+  "sc3_SysClient0351": {
+    "n_attack": 32883,
+    "n_detect": 7457,
+    "detect_rate": 0.2267737128607487,
+    "n_benign_sample": 20359,
+    "fpr": 0.04720271133159782
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "role_dev": {
+    "val_ppl": 1.3177352192396716,
+    "tau": 7.052165849208846,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "role_web": {
+    "val_ppl": 1.4358900990432346,
+    "tau": 6.793980426788329,
+    "fpr": 0.0,
+    "unk_rate": 0.001336898395721925,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "role_desktop": {
+    "val_ppl": 1.581015492789439,
+    "tau": 6.015486955642721,
+    "fpr": 0.006578947368421052,
+    "unk_rate": 0.02266081871345029,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "lovo_e3-dev-1": {
+    "val_ppl": 1.3160210315389547,
+    "tau": 8.129721412658677,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "lovo_e3-dev-2": {
+    "val_ppl": 1.314377230387018,
+    "tau": 8.354544639587441,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "lovo_e3-dev-3": {
+    "val_ppl": 1.3180043355126934,
+    "tau": 8.56639083862305,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 2,
+    "attack_total": 3
+  },
+  "lovo_e3-web-1": {
+    "val_ppl": 1.3123097414994713,
+    "tau": 8.139465599060067,
+    "fpr": 0.0,
+    "unk_rate": 0.0005213764337851929,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "lovo_e3-web-2": {
+    "val_ppl": 1.3178314773728823,
+    "tau": 8.83245697021482,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 3,
+    "attack_total": 3
+  },
+  "lovo_e3-desktop-1": {
+    "val_ppl": 1.899384786056025,
+    "tau": 12.12555275917054,
+    "fpr": 0.0,
+    "unk_rate": 0.0,
+    "attack_detect": 2,
+    "attack_total": 3
+  },
+  "lovo_e3-desktop-2": {
+    "val_ppl": 1.650391453138387,
+    "tau": 12.384540729522708,
+    "fpr": 0.0,
+    "unk_rate": 0.009082652134423252,
+    "attack_detect": 2,
+    "attack_total": 3
+  },
+  "lovo_mean": {
+    "fpr": 0.0,
+    "fpr_std": 0.0
+  },
+  "cross_matrix": {
+    "dev_to_dev": 0.0,
+    "dev_to_web": 0.009358288770053475,
+    "dev_to_desktop": 0.038309694399766045,
+    "cross_dev_dev": 0.0,
+    "cross_dev_web": 0.009358288770053475,
+    "cross_dev_desktop": 0.038309694399766045,
+    "web_to_dev": 0.1897816671086361,
+    "web_to_web": 0.0,
+    "web_to_desktop": 0.1419798216113467,
+    "cross_web_dev": 0.1897816671086361,
+    "cross_web_web": 0.0,
+    "cross_web_desktop": 0.1419798216113467,
+    "desktop_to_dev": 0.030053920268717404,
+    "desktop_to_web": 0.0062834224598930484,
+    "desktop_to_desktop": 0.0023395233221231173,
+    "cross_desktop_dev": 0.030053920268717404,
+    "cross_desktop_web": 0.0062834224598930484,
+    "cross_desktop_desktop": 0.0023395233221231173
+  }
+}

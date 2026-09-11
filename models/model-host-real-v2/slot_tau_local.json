@@ -1,0 +1,16 @@
+{
+  "slot_tau": {
+    "ARGV": 6.138,
+    "DST": 3.598,
+    "DT": 2.0,
+    "ET": 2.42,
+    "PARENT": 7.002,
+    "PC": 6.293,
+    "PROC": 7.2,
+    "UID": 2.904
+  },
+  "source": "host_real_benign",
+  "percentile": 99.5,
+  "min_tau": 2.0,
+  "n_calib": 217
+}

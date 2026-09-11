@@ -1,0 +1,14 @@
+{
+  "slot_tau": {
+    "ARGV": 4.493,
+    "DST": 1.733,
+    "DT": 10.463,
+    "ET": 2.241,
+    "PARENT": 10.093,
+    "PC": 6.854,
+    "PROC": 6.057,
+    "UID": 4.602
+  },
+  "source": "vm_clone_nighttime",
+  "n_calib": 20000
+}

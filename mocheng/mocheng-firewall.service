@@ -1,0 +1,17 @@
+[Unit]
+Description=MoCheng Firewall Daemon (Behavioral Network Firewall)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=__PYTHON__ __PROJECT_DIR__/fw_daemon.py model --loop --interval 10
+Restart=on-failure
+RestartSec=10
+Nice=19
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mocheng
+
+[Install]
+WantedBy=multi-user.target
